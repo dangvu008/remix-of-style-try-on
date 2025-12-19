@@ -1,4 +1,4 @@
-import { ClothingItem } from '@/types/clothing';
+import { ClothingItem, ClothingCategory } from '@/types/clothing';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -6,6 +6,15 @@ interface SelectedClothingListProps {
   items: ClothingItem[];
   onRemove: (id: string) => void;
 }
+
+const categoryLabels: Record<ClothingCategory, string> = {
+  all: 'Tất cả',
+  top: 'Áo',
+  bottom: 'Quần',
+  dress: 'Đầm',
+  shoes: 'Giày',
+  accessory: 'Phụ kiện',
+};
 
 export const SelectedClothingList = ({ items, onRemove }: SelectedClothingListProps) => {
   if (items.length === 0) {
@@ -24,14 +33,18 @@ export const SelectedClothingList = ({ items, onRemove }: SelectedClothingListPr
           <div
             key={item.id}
             className={cn(
-              "relative flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden",
+              "relative flex-shrink-0 w-20 rounded-xl overflow-hidden",
               "ring-2 ring-primary shadow-glow animate-scale-in"
             )}
           >
+            {/* Category badge */}
+            <div className="absolute top-1 left-1 z-10 px-1.5 py-0.5 bg-primary text-primary-foreground text-[9px] font-bold rounded-full">
+              {categoryLabels[item.category]}
+            </div>
             <img
               src={item.imageUrl}
               alt={item.name}
-              className="w-full h-full object-cover"
+              className="w-full h-20 object-cover"
             />
             <button
               onClick={() => onRemove(item.id)}
