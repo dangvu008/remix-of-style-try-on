@@ -1,4 +1,5 @@
 import { ClothingItem } from '@/types/clothing';
+import { createContext, useContext, useState, ReactNode } from 'react';
 
 export interface SavedOutfit {
   id: string;
@@ -9,9 +10,6 @@ export interface SavedOutfit {
   createdAt: Date;
 }
 
-// Context for managing outfits to compare
-import { createContext, useContext, useState, ReactNode } from 'react';
-
 interface CompareContextType {
   outfitsToCompare: SavedOutfit[];
   addToCompare: (outfit: SavedOutfit) => void;
@@ -20,7 +18,16 @@ interface CompareContextType {
   isInCompare: (outfitId: string) => boolean;
 }
 
-const CompareContext = createContext<CompareContextType | undefined>(undefined);
+// Default values for when context is not available
+const defaultContextValue: CompareContextType = {
+  outfitsToCompare: [],
+  addToCompare: () => {},
+  removeFromCompare: () => {},
+  clearCompare: () => {},
+  isInCompare: () => false,
+};
+
+const CompareContext = createContext<CompareContextType>(defaultContextValue);
 
 export const CompareProvider = ({ children }: { children: ReactNode }) => {
   const [outfitsToCompare, setOutfitsToCompare] = useState<SavedOutfit[]>([]);
@@ -60,9 +67,5 @@ export const CompareProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useCompare = () => {
-  const context = useContext(CompareContext);
-  if (!context) {
-    throw new Error('useCompare must be used within CompareProvider');
-  }
-  return context;
+  return useContext(CompareContext);
 };
