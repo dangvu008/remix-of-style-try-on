@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Camera, Save, Share2, Sparkles, Loader2, X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CategorySidebar } from '@/components/clothing/CategorySidebar';
@@ -12,12 +12,21 @@ import { useTryOnHistory } from '@/hooks/useTryOnHistory';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+const BODY_IMAGE_STORAGE_KEY = 'tryon_body_image';
+
 interface TryOnPageProps {
   initialItem?: ClothingItem;
 }
 
 export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
-  const [bodyImage, setBodyImage] = useState<string | undefined>();
+  const [bodyImage, setBodyImage] = useState<string | undefined>(() => {
+    // Load saved body image from localStorage on init
+    try {
+      return localStorage.getItem(BODY_IMAGE_STORAGE_KEY) || undefined;
+    } catch {
+      return undefined;
+    }
+  });
   const [selectedItems, setSelectedItems] = useState<ClothingItem[]>(() => 
     initialItem ? [initialItem] : []
   );
@@ -33,7 +42,18 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const clothingInputRef = useRef<HTMLInputElement>(null);
 
-  const filteredClothing = activeCategory === 'all' 
+  // Save body image to localStorage when it changes
+  useEffect(() => {
+    if (bodyImage) {
+      try {
+        localStorage.setItem(BODY_IMAGE_STORAGE_KEY, bodyImage);
+      } catch (e) {
+        console.warn('Could not save body image to localStorage:', e);
+      }
+    }
+  }, [bodyImage]);
+
+  const filteredClothing = activeCategory === 'all'
     ? clothing 
     : clothing.filter(c => c.category === activeCategory);
 
