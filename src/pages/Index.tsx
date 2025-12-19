@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { HomePage } from './HomePage';
@@ -6,7 +7,9 @@ import { TryOnPage } from './TryOnPage';
 import { ComparePage } from './ComparePage';
 import { FavoritesPage } from './FavoritesPage';
 import { ProfilePage } from './ProfilePage';
+import { AuthPage } from './AuthPage';
 import { CompareProvider } from '@/contexts/CompareContext';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { ClothingItem } from '@/types/clothing';
 import { toast } from 'sonner';
 
@@ -18,7 +21,7 @@ const pageTitles: Record<string, string> = {
   profile: 'Tài khoản',
 };
 
-const IndexContent = () => {
+const MainApp = () => {
   const [activeTab, setActiveTab] = useState('home');
   const [selectedItem, setSelectedItem] = useState<ClothingItem | undefined>();
 
@@ -85,9 +88,14 @@ const IndexContent = () => {
 
 const Index = () => {
   return (
-    <CompareProvider>
-      <IndexContent />
-    </CompareProvider>
+    <AuthProvider>
+      <CompareProvider>
+        <Routes>
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/*" element={<MainApp />} />
+        </Routes>
+      </CompareProvider>
+    </AuthProvider>
   );
 };
 
