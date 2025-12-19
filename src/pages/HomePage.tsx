@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, TrendingUp, Heart, ArrowRight } from 'lucide-react';
+import { Sparkles, TrendingUp, Heart, ArrowRight, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ClothingCard } from '@/components/clothing/ClothingCard';
 import { sampleClothing, sampleCollections } from '@/data/sampleClothing';
@@ -7,10 +7,11 @@ import { ClothingItem } from '@/types/clothing';
 
 interface HomePageProps {
   onNavigateToTryOn: () => void;
+  onNavigateToCompare?: () => void;
   onSelectItem: (item: ClothingItem) => void;
 }
 
-export const HomePage = ({ onNavigateToTryOn, onSelectItem }: HomePageProps) => {
+export const HomePage = ({ onNavigateToTryOn, onNavigateToCompare, onSelectItem }: HomePageProps) => {
   const [clothing, setClothing] = useState(sampleClothing);
 
   const toggleFavorite = (item: ClothingItem) => {
@@ -59,15 +60,18 @@ export const HomePage = ({ onNavigateToTryOn, onSelectItem }: HomePageProps) => 
             <Sparkles size={20} className="text-primary-foreground" />
           </div>
           <h3 className="font-semibold text-foreground">Phòng thử đồ</h3>
-          <p className="text-xs text-muted-foreground mt-1">Thử ngay</p>
+          <p className="text-xs text-muted-foreground mt-1">Thử ngay với AI</p>
         </button>
         
-        <button className="bg-card rounded-2xl p-4 shadow-soft border border-border hover:border-accent/50 hover:shadow-medium transition-all duration-300 text-left group">
-          <div className="w-10 h-10 rounded-xl gradient-accent flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <Heart size={20} className="text-accent-foreground" />
+        <button 
+          onClick={onNavigateToCompare}
+          className="bg-card rounded-2xl p-4 shadow-soft border border-border hover:border-accent/50 hover:shadow-medium transition-all duration-300 text-left group"
+        >
+          <div className="w-10 h-10 rounded-xl gradient-warm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <Scale size={20} className="text-accent-foreground" />
           </div>
-          <h3 className="font-semibold text-foreground">Bộ sưu tập</h3>
-          <p className="text-xs text-muted-foreground mt-1">{sampleCollections.length} bộ</p>
+          <h3 className="font-semibold text-foreground">So sánh Outfit</h3>
+          <p className="text-xs text-muted-foreground mt-1">Xem cạnh nhau</p>
         </button>
       </section>
 
