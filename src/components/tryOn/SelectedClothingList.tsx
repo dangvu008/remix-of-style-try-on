@@ -1,7 +1,8 @@
 import { ClothingItem, ClothingCategory } from '@/types/clothing';
-import { X } from 'lucide-react';
+import { X, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import confetti from 'canvas-confetti';
 
 interface SelectedClothingListProps {
   items: ClothingItem[];
@@ -22,6 +23,8 @@ export const SelectedClothingList = ({ items, onRemove }: SelectedClothingListPr
   // Track newly added items for animation
   const [animatingItems, setAnimatingItems] = useState<Set<string>>(new Set());
   const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
+  const [isOutfitComplete, setIsOutfitComplete] = useState(false);
+  const prevCompleteRef = useRef(false);
 
   // Group items by category
   const itemsByCategory = items.reduce((acc, item) => {
@@ -32,6 +35,50 @@ export const SelectedClothingList = ({ items, onRemove }: SelectedClothingListPr
   }, {} as Record<OutfitCategory, ClothingItem | undefined>);
 
   const selectedCount = Object.values(itemsByCategory).filter(Boolean).length;
+  
+  // Check if outfit is complete: (top + bottom) OR dress, plus shoes
+  const hasTop = !!itemsByCategory.top;
+  const hasBottom = !!itemsByCategory.bottom;
+  const hasDress = !!itemsByCategory.dress;
+  const hasShoes = !!itemsByCategory.shoes;
+  const outfitComplete = ((hasTop && hasBottom) || hasDress) && hasShoes;
+
+  // Trigger confetti when outfit becomes complete
+  useEffect(() => {
+    if (outfitComplete && !prevCompleteRef.current) {
+      setIsOutfitComplete(true);
+      
+      // Fire confetti!
+      const duration = 2000;
+      const end = Date.now() + duration;
+
+      const frame = () => {
+        confetti({
+          particleCount: 3,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 0.7 },
+          colors: ['#ff6b9d', '#c44569', '#f8b500', '#7ed6df', '#686de0']
+        });
+        confetti({
+          particleCount: 3,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 0.7 },
+          colors: ['#ff6b9d', '#c44569', '#f8b500', '#7ed6df', '#686de0']
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      };
+      frame();
+
+      // Reset after animation
+      setTimeout(() => setIsOutfitComplete(false), 3000);
+    }
+    prevCompleteRef.current = outfitComplete;
+  }, [outfitComplete]);
 
   // Trigger animation when new item is added
   useEffect(() => {
@@ -71,12 +118,21 @@ export const SelectedClothingList = ({ items, onRemove }: SelectedClothingListPr
         <p className="text-xs text-muted-foreground font-medium">
           Outfit đã chọn
         </p>
-        <span className={cn(
-          "text-xs font-bold transition-all duration-300",
-          selectedCount > 0 ? "text-primary scale-110" : "text-muted-foreground"
-        )}>
-          {selectedCount}/{outfitSlots.length} items
-        </span>
+        <div className="flex items-center gap-1.5">
+          {isOutfitComplete && (
+            <span className="flex items-center gap-1 text-[10px] font-bold text-primary animate-scale-in">
+              <Sparkles size={12} className="animate-pulse" />
+              Hoàn chỉnh!
+            </span>
+          )}
+          <span className={cn(
+            "text-xs font-bold transition-all duration-300",
+            selectedCount > 0 ? "text-primary" : "text-muted-foreground",
+            isOutfitComplete && "scale-110"
+          )}>
+            {selectedCount}/{outfitSlots.length}
+          </span>
+        </div>
       </div>
       
       <div className="grid grid-cols-5 gap-2">
