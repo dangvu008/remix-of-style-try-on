@@ -25,18 +25,42 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const prompt = `Analyze this image and determine if it shows a clothing item or fashion accessory. Provide a JSON response with the following structure:
+    const prompt = `Analyze this image and determine if it shows a clothing item or fashion accessory suitable for virtual try-on. Provide a JSON response with the following structure:
 {
   "isClothing": boolean (true if image shows clothing, shoes, or fashion accessory),
+  "isFullyVisible": boolean (true if the item is fully spread out, opened, and completely visible - NOT folded, crumpled, or partially hidden),
+  "isFolded": boolean (true if the clothing is folded, rolled up, or not in a displayable state),
   "category": "top" | "bottom" | "dress" | "shoes" | "accessory" | "unknown",
   "subcategory": string (e.g., "t-shirt", "jeans", "sneakers", "handbag", "necklace", etc.),
   "color": string (primary color of the item),
   "pattern": string (e.g., "solid", "striped", "floral", "checkered", "graphic", etc.),
   "quality": "good" | "acceptable" | "poor",
-  "issues": string[] (list any issues like "too blurry", "multiple items", "not clothing", "partially visible", "bad lighting", etc.),
+  "issues": string[] (list any issues),
   "style": string (e.g., "casual", "formal", "sporty", "vintage", "streetwear", etc.),
   "gender": "male" | "female" | "unisex" | "unknown"
 }
+
+CRITICAL CHECKS:
+1. Is it clothing/accessory? If not, isClothing = false
+2. Is the item FULLY SPREAD OUT and OPENED? 
+   - For tops: Should be laid flat showing front/back, not folded
+   - For pants: Should be laid flat showing full length, not folded
+   - For dresses: Should be hung or laid flat, fully visible
+   - For shoes: Should show the full shoe, not in a box
+   - If folded, crumpled, stacked, or in packaging: isFolded = true, isFullyVisible = false
+
+ISSUES to detect and add to the array:
+- "folded" - Item is folded or rolled up
+- "crumpled" - Item is wrinkled or crumpled in a pile
+- "partially_visible" - Only part of the item is visible
+- "in_packaging" - Item is still in packaging/box
+- "multiple_items" - Multiple clothing items in one image
+- "worn_by_person" - Item is being worn (not flat display)
+- "too_blurry" - Image is too blurry
+- "bad_lighting" - Poor lighting makes details hard to see
+- "too_small" - Item appears too small/far away
+- "not_clothing" - Not a clothing item or accessory
+- "background_cluttered" - Too much background noise
 
 Category definitions:
 - "top": shirts, t-shirts, blouses, sweaters, jackets, coats, hoodies
@@ -46,9 +70,9 @@ Category definitions:
 - "accessory": bags, hats, jewelry, scarves, belts, watches, sunglasses
 
 Quality criteria:
-- "good": Clear image, single item, good lighting, item fully visible
-- "acceptable": Minor issues but item is recognizable
-- "poor": Too blurry, bad lighting, item not clearly visible, or not a clothing item
+- "good": Clear image, single item fully opened/spread out, good lighting, white or clean background
+- "acceptable": Minor issues but item is clearly recognizable and mostly visible
+- "poor": Folded, blurry, bad lighting, item not clearly visible, or not clothing
 
 Only respond with the JSON object, nothing else.`;
 
@@ -106,6 +130,8 @@ Only respond with the JSON object, nothing else.`;
       console.error('Failed to parse AI response:', content);
       analysis = {
         isClothing: false,
+        isFullyVisible: false,
+        isFolded: false,
         category: 'unknown',
         subcategory: 'unknown',
         color: 'unknown',

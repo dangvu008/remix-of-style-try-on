@@ -5,6 +5,8 @@ import { ClothingCategory } from '@/types/clothing';
 
 export interface ClothingAnalysis {
   isClothing: boolean;
+  isFullyVisible: boolean;
+  isFolded: boolean;
   category: 'top' | 'bottom' | 'dress' | 'shoes' | 'accessory' | 'unknown';
   subcategory: string;
   color: string;
@@ -14,6 +16,21 @@ export interface ClothingAnalysis {
   style: string;
   gender: 'male' | 'female' | 'unisex' | 'unknown';
 }
+
+// Map issue codes to translation keys
+const issueTranslationMap: Record<string, string> = {
+  'folded': 'msg_clothing_folded',
+  'crumpled': 'msg_clothing_crumpled',
+  'partially_visible': 'msg_clothing_partial',
+  'in_packaging': 'msg_clothing_packaged',
+  'multiple_items': 'msg_clothing_multiple',
+  'worn_by_person': 'msg_clothing_worn',
+  'too_blurry': 'msg_clothing_blurry',
+  'bad_lighting': 'msg_clothing_lighting',
+  'too_small': 'msg_clothing_small',
+  'not_clothing': 'msg_not_clothing',
+  'background_cluttered': 'msg_clothing_cluttered',
+};
 
 export interface ClothingValidationResult {
   isValid: boolean;
@@ -133,6 +150,8 @@ export const useClothingValidation = () => {
         // Fallback - allow image but mark as unknown
         analysis = {
           isClothing: true,
+          isFullyVisible: true,
+          isFolded: false,
           category: 'unknown',
           subcategory: 'unknown',
           color: 'unknown',
@@ -146,15 +165,28 @@ export const useClothingValidation = () => {
       
       // Validate analysis results
       if (!analysis.isClothing) {
-        errors.push('Not a clothing item');
+        errors.push('not_clothing');
+      }
+      
+      if (analysis.isFolded) {
+        errors.push('folded');
+      }
+      
+      if (!analysis.isFullyVisible) {
+        errors.push('partially_visible');
       }
       
       if (analysis.quality === 'poor') {
-        errors.push('Image quality is too low');
+        errors.push('poor_quality');
       }
       
+      // Add other issues from AI analysis
       if (analysis.issues && analysis.issues.length > 0) {
-        errors.push(...analysis.issues);
+        for (const issue of analysis.issues) {
+          if (!errors.includes(issue)) {
+            errors.push(issue);
+          }
+        }
       }
       
       if (errors.length > 0) {
@@ -221,6 +253,7 @@ export const useClothingValidation = () => {
     isValidating,
     progress,
     resetProgress,
-    mapToAppCategory
+    mapToAppCategory,
+    issueTranslationMap
   };
 };
