@@ -100,6 +100,16 @@ export const translations = {
     msg_clothing_category_accessory: 'Phụ kiện',
     msg_upload_clothing: 'Tải ảnh quần áo',
     msg_clothing_upload_success: 'Đã thêm vào bộ sưu tập!',
+    msg_clothing_folded: 'Quần áo đang gập, vui lòng trải phẳng',
+    msg_clothing_crumpled: 'Quần áo bị nhàu/gấp, vui lòng trải phẳng',
+    msg_clothing_partial: 'Chỉ thấy một phần quần áo, cần ảnh đầy đủ',
+    msg_clothing_packaged: 'Quần áo còn trong bao bì, vui lòng lấy ra',
+    msg_clothing_multiple: 'Chỉ tải 1 món đồ mỗi lần',
+    msg_clothing_worn: 'Vui lòng tải ảnh quần áo trải phẳng, không phải ảnh đang mặc',
+    msg_clothing_blurry: 'Ảnh quá mờ, vui lòng chụp rõ hơn',
+    msg_clothing_lighting: 'Ánh sáng kém, vui lòng chụp ở nơi sáng hơn',
+    msg_clothing_small: 'Ảnh quá nhỏ hoặc quần áo ở quá xa',
+    msg_clothing_cluttered: 'Nền ảnh quá rối, vui lòng chụp trên nền trắng/đơn giản',
     
     // Settings
     language: 'Ngôn ngữ',
@@ -204,6 +214,16 @@ export const translations = {
     msg_clothing_category_accessory: 'Accessory',
     msg_upload_clothing: 'Upload clothing',
     msg_clothing_upload_success: 'Added to collection!',
+    msg_clothing_folded: 'Clothing is folded, please lay flat',
+    msg_clothing_crumpled: 'Clothing is crumpled, please lay flat',
+    msg_clothing_partial: 'Only partial view, need full image',
+    msg_clothing_packaged: 'Item still in packaging, please remove',
+    msg_clothing_multiple: 'Please upload one item at a time',
+    msg_clothing_worn: 'Please upload flat clothing, not worn photos',
+    msg_clothing_blurry: 'Image too blurry, please take a clearer photo',
+    msg_clothing_lighting: 'Poor lighting, please use better light',
+    msg_clothing_small: 'Image too small or item too far away',
+    msg_clothing_cluttered: 'Background too cluttered, use plain background',
     
     // Settings
     language: 'Language',
