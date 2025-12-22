@@ -1,4 +1,4 @@
-export type ClothingCategory = 'all' | 'top' | 'bottom' | 'dress' | 'shoes' | 'accessory';
+export type ClothingCategory = 'all' | 'top' | 'bottom' | 'dress' | 'shoes' | 'accessory' | 'unknown';
 
 export interface ClothingItem {
   id: string;

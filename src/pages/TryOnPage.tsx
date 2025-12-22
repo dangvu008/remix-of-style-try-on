@@ -9,6 +9,7 @@ import { AddClothingDialog } from '@/components/clothing/AddClothingDialog';
 import { ShareOutfitDialog } from '@/components/outfit/ShareOutfitDialog';
 import { ShareToPublicDialog } from '@/components/outfit/ShareToPublicDialog';
 import { LoginRequiredDialog } from '@/components/auth/LoginRequiredDialog';
+import { SelectCategoryDialog } from '@/components/clothing/SelectCategoryDialog';
 import { sampleClothing } from '@/data/sampleClothing';
 import { ClothingItem, ClothingCategory } from '@/types/clothing';
 import { useAITryOn } from '@/hooks/useAITryOn';
@@ -69,6 +70,11 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showShareToPublicDialog, setShowShareToPublicDialog] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [pendingUnknownItem, setPendingUnknownItem] = useState<{
+    item: Omit<ClothingItem, 'category'>;
+    imageUrl: string;
+  } | null>(null);
   const { processVirtualTryOn, isProcessing, clearResult } = useAITryOn();
   const { saveTryOnResult } = useTryOnHistory();
   const { userClothing, saveClothingItem, updateClothingItem, deleteClothingItem, isSaving: isSavingClothing } = useUserClothing();
@@ -196,18 +202,29 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
         return;
       }
       
-      const aiCategory = result.analysis?.category || 'top';
+      const aiCategory = result.analysis?.category || 'unknown';
       const appCategory = mapToAppCategory(aiCategory);
       
-      const newItem: ClothingItem = {
+      const baseItem = {
         id: Date.now().toString(),
         name: result.analysis?.subcategory || file.name.replace(/\.[^/.]+$/, ''),
-        category: appCategory,
         imageUrl: result.processedImageUrl || imageDataUrl,
         color: result.analysis?.color,
         gender: result.analysis?.gender,
         style: result.analysis?.style,
         pattern: result.analysis?.pattern,
+      };
+      
+      // If category is unknown, show dialog for user to select
+      if (appCategory === 'unknown' || appCategory === 'all') {
+        setPendingUnknownItem({ item: baseItem, imageUrl: result.processedImageUrl || imageDataUrl });
+        setShowCategoryDialog(true);
+        return;
+      }
+      
+      const newItem: ClothingItem = {
+        ...baseItem,
+        category: appCategory,
       };
       
       handleAddClothing(newItem);
@@ -244,6 +261,26 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
       return [...filtered, item];
     });
     toast.success(`${t('msg_item_selected')} ${item.name}`);
+  };
+
+  const handleCategorySelect = (category: ClothingCategory) => {
+    if (pendingUnknownItem) {
+      const newItem: ClothingItem = {
+        ...pendingUnknownItem.item,
+        category,
+      } as ClothingItem;
+      
+      handleAddClothing(newItem);
+      
+      if (user) {
+        setPendingClothingToSave(newItem);
+      }
+      
+      const categoryLabel = t(`msg_clothing_category_${category}` as any) || category;
+      toast.success(`${t('msg_clothing_detected')} ${categoryLabel}`);
+      
+      setPendingUnknownItem(null);
+    }
   };
 
   const handleRemoveClothing = (id: string) => {
@@ -775,6 +812,17 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
       <LoginRequiredDialog
         isOpen={showLoginDialog}
         onClose={() => setShowLoginDialog(false)}
+      />
+
+      {/* Select Category Dialog */}
+      <SelectCategoryDialog
+        isOpen={showCategoryDialog}
+        onClose={() => {
+          setShowCategoryDialog(false);
+          setPendingUnknownItem(null);
+        }}
+        onSelect={handleCategorySelect}
+        imageUrl={pendingUnknownItem?.imageUrl}
       />
     </div>
   );
