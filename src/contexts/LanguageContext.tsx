@@ -7,7 +7,19 @@ interface LanguageContextType {
   t: (key: TranslationKey) => string;
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+const defaultContext: LanguageContextType = {
+  language: 'vi',
+  setLanguage: () => {
+    // no-op fallback when provider is missing
+    if (import.meta.env.DEV) {
+      console.warn('LanguageProvider is missing; setLanguage() is a no-op.');
+    }
+  },
+  t: (key) => translations.vi[key] || key,
+};
+
+// Provide a safe default so the app never crashes if a component renders outside LanguageProvider
+const LanguageContext = createContext<LanguageContextType>(defaultContext);
 
 const LANGUAGE_STORAGE_KEY = 'app_language';
 
@@ -45,9 +57,5 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 };
 
 export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
+  return useContext(LanguageContext);
 };
