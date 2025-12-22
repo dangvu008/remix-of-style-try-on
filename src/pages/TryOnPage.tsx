@@ -418,56 +418,66 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
 
       {/* AI Result Modal */}
       {aiResultImage && (
-        <div className="fixed inset-0 z-50 bg-foreground/80 backdrop-blur-sm flex items-center justify-center p-4 animate-scale-in">
-          <div className="bg-card rounded-2xl shadow-medium max-w-sm w-full overflow-hidden max-h-[85vh] flex flex-col">
-            <div className="relative flex-1 min-h-0 bg-muted flex items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-foreground/90 backdrop-blur-md flex items-center justify-center p-4 animate-scale-in">
+          <div className="relative max-w-sm w-full max-h-[85vh]">
+            {/* Close button */}
+            <button
+              onClick={handleCloseResult}
+              className="absolute -top-12 right-0 w-10 h-10 rounded-full bg-card/20 backdrop-blur-sm flex items-center justify-center text-primary-foreground hover:bg-card/40 transition-colors z-10"
+            >
+              <X size={20} />
+            </button>
+
+            {/* Image container */}
+            <div className="relative rounded-2xl overflow-hidden shadow-lg">
               <img 
                 src={aiResultImage} 
                 alt="AI Try-On Result" 
-                className="w-full h-full max-h-[65vh] object-contain"
+                className="w-full max-h-[75vh] object-contain bg-card"
               />
-              <Button
-                variant="ghost"
-                size="iconSm"
-                onClick={handleCloseResult}
-                className="absolute top-2 right-2 bg-card/80 backdrop-blur-sm rounded-full"
-              >
-                <X size={18} />
-              </Button>
-            </div>
-            <div className="p-4 space-y-3">
-              <h3 className="font-display font-bold text-lg text-center">
-                {t('tryon_result_title')}
-              </h3>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={handleDownloadResult}
+              
+              {/* Floating action buttons - bottom right corner */}
+              <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                {/* Change photo button */}
+                <button
+                  onClick={() => {
+                    handleCloseResult();
+                    handleAddBodyImage();
+                  }}
+                  className="w-11 h-11 rounded-full bg-card border-2 border-primary text-primary flex items-center justify-center shadow-lg hover:bg-primary hover:text-primary-foreground transition-all hover:scale-105 active:scale-95"
+                  title={t('tryon_change_photo')}
                 >
-                  <Download size={16} />
-                  {t('download')}
-                </Button>
-                <Button
-                  variant="default"
-                  className="flex-1"
+                  <Camera size={18} />
+                </button>
+
+                {/* Save button */}
+                <button
                   onClick={handleSave}
                   disabled={isSaving}
+                  className="w-11 h-11 rounded-full bg-card border border-border text-foreground flex items-center justify-center shadow-lg hover:bg-secondary transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                  title={t('save')}
                 >
                   {isSaving ? (
-                    <Loader2 size={16} className="animate-spin" />
+                    <Loader2 size={18} className="animate-spin" />
                   ) : (
-                    <Save size={16} />
+                    <Save size={18} />
                   )}
-                  {isSaving ? t('tryon_saving') : t('save')}
-                </Button>
-                <Button
-                  variant="accent"
-                  size="icon"
+                </button>
+
+                {/* Share button */}
+                <button
                   onClick={handleShare}
+                  className="w-11 h-11 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 text-white flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+                  title={t('share')}
                 >
-                  <Share2 size={16} />
-                </Button>
+                  <Share2 size={18} />
+                </button>
+              </div>
+
+              {/* Success indicator */}
+              <div className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-primary/90 backdrop-blur-sm text-primary-foreground text-xs font-medium flex items-center gap-1.5">
+                <Sparkles size={12} />
+                {t('tryon_result_title')}
               </div>
             </div>
           </div>
