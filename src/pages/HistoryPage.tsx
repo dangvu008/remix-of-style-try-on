@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { History, Trash2, Share2, Download, ArrowLeft, Loader2, ImageOff } from 'lucide-react';
+import { History, Trash2, Share2, Download, Loader2, ImageOff, Scale, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCompare, SavedOutfit } from '@/contexts/CompareContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 interface ClothingItemData {
   name: string;
@@ -19,12 +21,19 @@ interface TryOnHistoryItem {
   created_at: string;
 }
 
-export const HistoryPage = () => {
+interface HistoryPageProps {
+  onNavigateToCompare?: () => void;
+}
+
+export const HistoryPage = ({ onNavigateToCompare }: HistoryPageProps) => {
   const { user, loading: authLoading } = useAuth();
+  const { addToCompare, outfitsToCompare, isInCompare, clearCompare } = useCompare();
   const navigate = useNavigate();
   const [history, setHistory] = useState<TryOnHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -123,6 +132,58 @@ export const HistoryPage = () => {
     });
   };
 
+  const toggleSelectForCompare = (item: TryOnHistoryItem) => {
+    if (selectedForCompare.includes(item.id)) {
+      setSelectedForCompare(prev => prev.filter(id => id !== item.id));
+    } else if (selectedForCompare.length < 4) {
+      setSelectedForCompare(prev => [...prev, item.id]);
+    } else {
+      toast.error('Chỉ có thể so sánh tối đa 4 outfit');
+    }
+  };
+
+  const handleStartCompare = () => {
+    if (selectedForCompare.length < 2) {
+      toast.error('Chọn ít nhất 2 outfit để so sánh');
+      return;
+    }
+
+    // Clear existing compare items and add selected ones
+    clearCompare();
+    
+    selectedForCompare.forEach(id => {
+      const item = history.find(h => h.id === id);
+      if (item) {
+        const outfit: SavedOutfit = {
+          id: item.id,
+          name: formatDate(item.created_at),
+          items: item.clothing_items.map((ci, idx) => ({
+            id: `${item.id}-${idx}`,
+            name: ci.name,
+            category: 'top' as const,
+            imageUrl: ci.imageUrl,
+          })),
+          resultImageUrl: item.result_image_url,
+          createdAt: new Date(item.created_at),
+        };
+        addToCompare(outfit);
+      }
+    });
+
+    toast.success(`Đã thêm ${selectedForCompare.length} outfit vào so sánh`);
+    setCompareMode(false);
+    setSelectedForCompare([]);
+    
+    if (onNavigateToCompare) {
+      onNavigateToCompare();
+    }
+  };
+
+  const cancelCompareMode = () => {
+    setCompareMode(false);
+    setSelectedForCompare([]);
+  };
+
   // Not logged in
   if (!authLoading && !user) {
     return (
@@ -157,19 +218,69 @@ export const HistoryPage = () => {
   return (
     <div className="pb-24 pt-16 px-4 max-w-md mx-auto">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center shadow-glow">
-          <History size={24} className="text-primary-foreground" />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl gradient-primary flex items-center justify-center shadow-glow">
+            <History size={24} className="text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="font-display font-bold text-xl text-foreground">
+              Lịch sử thử đồ
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {compareMode 
+                ? `Đã chọn ${selectedForCompare.length}/4` 
+                : `${history.length} kết quả đã lưu`}
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="font-display font-bold text-xl text-foreground">
-            Lịch sử thử đồ
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {history.length} kết quả đã lưu
-          </p>
-        </div>
+        
+        {/* Compare mode toggle */}
+        {history.length >= 2 && !compareMode && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCompareMode(true)}
+            className="gap-1"
+          >
+            <Scale size={16} />
+            So sánh
+          </Button>
+        )}
       </div>
+
+      {/* Compare mode bar */}
+      {compareMode && (
+        <div className="fixed bottom-20 left-4 right-4 z-40 bg-card border border-border rounded-2xl shadow-medium p-3 flex items-center justify-between animate-slide-up max-w-md mx-auto">
+          <div className="flex items-center gap-2">
+            <Scale size={18} className="text-primary" />
+            <span className="text-sm font-medium">
+              {selectedForCompare.length < 2 
+                ? `Chọn thêm ${2 - selectedForCompare.length} outfit` 
+                : `${selectedForCompare.length} outfit đã chọn`}
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={cancelCompareMode}
+            >
+              <X size={16} />
+              Hủy
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleStartCompare}
+              disabled={selectedForCompare.length < 2}
+            >
+              <Scale size={16} />
+              So sánh
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Empty state */}
       {history.length === 0 && (
@@ -188,70 +299,95 @@ export const HistoryPage = () => {
 
       {/* History grid */}
       <div className="grid grid-cols-2 gap-3">
-        {history.map((item, index) => (
-          <div
-            key={item.id}
-            className="bg-card rounded-2xl overflow-hidden shadow-soft border border-border animate-slide-up"
-            style={{ animationDelay: `${index * 0.05}s` }}
-          >
-            {/* Image */}
-            <div className="relative aspect-[3/4] bg-secondary">
-              <img
-                src={item.result_image_url}
-                alt="Try-on result"
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-              
-              {/* Clothing badge */}
-              {item.clothing_items && item.clothing_items.length > 0 && (
-                <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-card/90 backdrop-blur-sm text-xs font-medium text-foreground">
-                  {item.clothing_items.length} món
-                </div>
+        {history.map((item, index) => {
+          const isSelected = selectedForCompare.includes(item.id);
+          
+          return (
+            <div
+              key={item.id}
+              onClick={() => compareMode && toggleSelectForCompare(item)}
+              className={cn(
+                "bg-card rounded-2xl overflow-hidden shadow-soft border animate-slide-up transition-all",
+                compareMode && "cursor-pointer",
+                isSelected 
+                  ? "border-primary ring-2 ring-primary/20" 
+                  : "border-border"
               )}
-            </div>
+              style={{ animationDelay: `${index * 0.05}s` }}
+            >
+              {/* Image */}
+              <div className="relative aspect-[3/4] bg-secondary">
+                <img
+                  src={item.result_image_url}
+                  alt="Try-on result"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                
+                {/* Selection indicator */}
+                {compareMode && (
+                  <div className={cn(
+                    "absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all",
+                    isSelected 
+                      ? "gradient-primary text-primary-foreground" 
+                      : "bg-card/80 backdrop-blur-sm border border-border"
+                  )}>
+                    {isSelected && <Check size={14} />}
+                  </div>
+                )}
+                
+                {/* Clothing badge */}
+                {item.clothing_items && item.clothing_items.length > 0 && (
+                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-card/90 backdrop-blur-sm text-xs font-medium text-foreground">
+                    {item.clothing_items.length} món
+                  </div>
+                )}
+              </div>
 
-            {/* Info */}
-            <div className="p-3 space-y-2">
-              <p className="text-xs text-muted-foreground">
-                {formatDate(item.created_at)}
-              </p>
-              
-              {/* Actions */}
-              <div className="flex gap-1">
-                <Button
-                  variant="ghost"
-                  size="iconSm"
-                  onClick={() => handleDownload(item)}
-                  className="flex-1 h-8"
-                >
-                  <Download size={14} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="iconSm"
-                  onClick={() => handleShare(item)}
-                  className="flex-1 h-8"
-                >
-                  <Share2 size={14} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="iconSm"
-                  onClick={() => handleDelete(item)}
-                  disabled={deletingId === item.id}
-                  className="flex-1 h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  {deletingId === item.id ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Trash2 size={14} />
-                  )}
-                </Button>
+              {/* Info */}
+              <div className="p-3 space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(item.created_at)}
+                </p>
+                
+                {/* Actions - hide in compare mode */}
+                {!compareMode && (
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="iconSm"
+                      onClick={() => handleDownload(item)}
+                      className="flex-1 h-8"
+                    >
+                      <Download size={14} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="iconSm"
+                      onClick={() => handleShare(item)}
+                      className="flex-1 h-8"
+                    >
+                      <Share2 size={14} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="iconSm"
+                      onClick={() => handleDelete(item)}
+                      disabled={deletingId === item.id}
+                      className="flex-1 h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      {deletingId === item.id ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={14} />
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
