@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Save, Share2, Sparkles, Loader2, X, Download } from 'lucide-react';
+import { Camera, Save, Share2, Sparkles, Loader2, X, Download, Heart, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CategorySidebar } from '@/components/clothing/CategorySidebar';
 import { ClothingCard } from '@/components/clothing/ClothingCard';
@@ -9,11 +9,13 @@ import { sampleClothing } from '@/data/sampleClothing';
 import { ClothingItem, ClothingCategory } from '@/types/clothing';
 import { useAITryOn } from '@/hooks/useAITryOn';
 import { useTryOnHistory } from '@/hooks/useTryOnHistory';
+import { useUserClothing } from '@/hooks/useUserClothing';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useClothingValidation } from '@/hooks/useClothingValidation';
 import { toast } from 'sonner';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const BODY_IMAGE_STORAGE_KEY = 'tryon_body_image';
 
@@ -34,12 +36,15 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
     initialItem ? [initialItem] : []
   );
   const [activeCategory, setActiveCategory] = useState<ClothingCategory>('top');
+  const [clothingSource, setClothingSource] = useState<'sample' | 'saved'>('sample');
   const [clothing] = useState(sampleClothing);
   const [aiResultImage, setAiResultImage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingClothingToSave, setPendingClothingToSave] = useState<ClothingItem | null>(null);
   
   const { processVirtualTryOn, isProcessing, clearResult } = useAITryOn();
   const { saveTryOnResult } = useTryOnHistory();
+  const { userClothing, saveClothingItem, deleteClothingItem, isSaving: isSavingClothing } = useUserClothing();
   const { user } = useAuth();
   const { t, language } = useLanguage();
   const { 
@@ -64,9 +69,11 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
     }
   }, [bodyImage]);
 
+  // Get clothing based on source
+  const displayedClothing = clothingSource === 'saved' ? userClothing : clothing;
   const filteredClothing = activeCategory === 'all'
-    ? clothing 
-    : clothing.filter(c => c.category === activeCategory);
+    ? displayedClothing 
+    : displayedClothing.filter(c => c.category === activeCategory);
 
   const handleAddBodyImage = () => {
     fileInputRef.current?.click();
@@ -145,9 +152,16 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
         imageUrl: result.processedImageUrl || imageDataUrl,
         color: result.analysis?.color,
         gender: result.analysis?.gender,
+        style: result.analysis?.style,
+        pattern: result.analysis?.pattern,
       };
       
       handleAddClothing(newItem);
+      
+      // Store pending item and ask if user wants to save
+      if (user) {
+        setPendingClothingToSave(newItem);
+      }
       
       // Show success toast with detected info
       const genderLabel = result.analysis?.gender === 'male' 
@@ -186,6 +200,16 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
   const handleRemoveClothing = (id: string) => {
     setSelectedItems(prev => prev.filter(item => item.id !== id));
     toast.success(t('msg_item_removed'));
+  };
+
+  const handleSaveClothingToCollection = async () => {
+    if (!pendingClothingToSave) return;
+    await saveClothingItem(pendingClothingToSave);
+    setPendingClothingToSave(null);
+  };
+
+  const handleDeleteSavedClothing = async (id: string) => {
+    await deleteClothingItem(id);
   };
 
   const handleAITryOn = async () => {
@@ -374,6 +398,58 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
         </div>
       )}
 
+      {/* Save Clothing Dialog */}
+      {pendingClothingToSave && (
+        <div className="fixed inset-0 z-50 bg-foreground/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-card rounded-2xl p-5 max-w-xs w-full shadow-medium space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-16 h-16 rounded-xl overflow-hidden bg-muted flex-shrink-0">
+                <img 
+                  src={pendingClothingToSave.imageUrl} 
+                  alt={pendingClothingToSave.name}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-foreground truncate">{pendingClothingToSave.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {pendingClothingToSave.color && `${pendingClothingToSave.color}`}
+                  {pendingClothingToSave.gender && pendingClothingToSave.gender !== 'unknown' && ` • ${
+                    pendingClothingToSave.gender === 'male' ? t('msg_gender_male') : 
+                    pendingClothingToSave.gender === 'female' ? t('msg_gender_female') : 'Unisex'
+                  }`}
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-center text-muted-foreground">
+              {t('msg_save_clothing_question')}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setPendingClothingToSave(null)}
+              >
+                {t('cancel')}
+              </Button>
+              <Button
+                variant="default"
+                className="flex-1"
+                onClick={handleSaveClothingToCollection}
+                disabled={isSavingClothing}
+              >
+                {isSavingClothing ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Heart size={16} />
+                )}
+                {t('save')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main content */}
       <div className="flex gap-2 px-2">
         {/* Left sidebar - Categories */}
@@ -398,17 +474,55 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
           />
         </div>
 
-        {/* Right sidebar - Clothing items */}
-        <div className="flex-shrink-0 w-20 space-y-2 overflow-y-auto max-h-[400px] pr-1">
-          {filteredClothing.map((item) => (
-            <ClothingCard
-              key={item.id}
-              item={item}
-              size="sm"
-              onSelect={handleAddClothing}
-              isSelected={selectedItems.some(i => i.id === item.id)}
-            />
-          ))}
+        {/* Right sidebar - Clothing items with tabs */}
+        <div className="flex-shrink-0 w-24 space-y-2">
+          {/* Source tabs */}
+          {user && (
+            <Tabs value={clothingSource} onValueChange={(v) => setClothingSource(v as 'sample' | 'saved')} className="w-full">
+              <TabsList className="w-full h-7 p-0.5">
+                <TabsTrigger value="sample" className="flex-1 text-[10px] h-6 px-1">
+                  {t('clothing_sample')}
+                </TabsTrigger>
+                <TabsTrigger value="saved" className="flex-1 text-[10px] h-6 px-1">
+                  {t('clothing_saved')} ({userClothing.length})
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
+          
+          {/* Clothing list */}
+          <div className="space-y-2 overflow-y-auto max-h-[360px] pr-1">
+            {filteredClothing.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="text-xs text-muted-foreground">
+                  {clothingSource === 'saved' ? t('no_saved_clothing') : t('no_clothing')}
+                </p>
+              </div>
+            ) : (
+              filteredClothing.map((item) => (
+                <div key={item.id} className="relative group">
+                  <ClothingCard
+                    item={item}
+                    size="sm"
+                    onSelect={handleAddClothing}
+                    isSelected={selectedItems.some(i => i.id === item.id)}
+                  />
+                  {/* Delete button for saved clothing */}
+                  {clothingSource === 'saved' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteSavedClothing(item.id);
+                      }}
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-soft"
+                    >
+                      <Trash2 size={10} />
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 
