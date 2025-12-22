@@ -41,6 +41,45 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_outfits: {
+        Row: {
+          clothing_items: Json
+          created_at: string
+          description: string | null
+          id: string
+          is_featured: boolean
+          likes_count: number
+          result_image_url: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clothing_items?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean
+          likes_count?: number
+          result_image_url: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clothing_items?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean
+          likes_count?: number
+          result_image_url?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       try_on_history: {
         Row: {
           body_image_url: string
@@ -82,6 +121,7 @@ export type Database = {
           is_purchased: boolean
           name: string
           pattern: string | null
+          purchase_url: string | null
           style: string | null
           tags: string[] | null
           user_id: string
@@ -96,6 +136,7 @@ export type Database = {
           is_purchased?: boolean
           name: string
           pattern?: string | null
+          purchase_url?: string | null
           style?: string | null
           tags?: string[] | null
           user_id: string
@@ -110,6 +151,7 @@ export type Database = {
           is_purchased?: boolean
           name?: string
           pattern?: string | null
+          purchase_url?: string | null
           style?: string | null
           tags?: string[] | null
           user_id?: string

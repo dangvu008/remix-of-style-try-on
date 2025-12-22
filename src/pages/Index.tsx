@@ -11,6 +11,7 @@ import { HistoryPage } from './HistoryPage';
 import { WardrobePage } from './WardrobePage';
 import { ClosetPage } from './ClosetPage';
 import { AuthPage } from './AuthPage';
+import { SharedOutfitDetailPage } from './SharedOutfitDetailPage';
 import { CompareProvider } from '@/contexts/CompareContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ClothingItem } from '@/types/clothing';
@@ -127,6 +128,7 @@ const Index = () => {
       <CompareProvider>
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/outfit/:id" element={<SharedOutfitDetailPage />} />
           <Route path="/*" element={<MainApp />} />
         </Routes>
       </CompareProvider>
