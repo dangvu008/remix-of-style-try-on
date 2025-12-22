@@ -25,11 +25,16 @@ export interface SharedOutfit {
   isLiked?: boolean;
 }
 
+const PAGE_SIZE = 12;
+
 export const useSharedOutfits = () => {
   const { user } = useAuth();
   const [sharedOutfits, setSharedOutfits] = useState<SharedOutfit[]>([]);
   const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
 
   const fetchUserLikes = useCallback(async () => {
     if (!user) {
@@ -47,13 +52,24 @@ export const useSharedOutfits = () => {
     }
   }, [user]);
 
-  const fetchSharedOutfits = useCallback(async () => {
-    setIsLoading(true);
+  const fetchSharedOutfits = useCallback(async (reset = false) => {
+    const currentPage = reset ? 0 : page;
+    
+    if (reset) {
+      setIsLoading(true);
+      setPage(0);
+    } else {
+      setIsLoadingMore(true);
+    }
+
+    const from = currentPage * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
     const { data, error } = await supabase
       .from('shared_outfits')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(20);
+      .range(from, to);
 
     if (!error && data) {
       const typedData = data.map(item => ({
@@ -61,10 +77,25 @@ export const useSharedOutfits = () => {
         clothing_items: (item.clothing_items || []) as unknown as ClothingItemData[],
         isLiked: userLikes.has(item.id),
       }));
-      setSharedOutfits(typedData);
+      
+      if (reset) {
+        setSharedOutfits(typedData);
+      } else {
+        setSharedOutfits(prev => [...prev, ...typedData]);
+      }
+      
+      setHasMore(data.length === PAGE_SIZE);
     }
+    
     setIsLoading(false);
-  }, [userLikes]);
+    setIsLoadingMore(false);
+  }, [userLikes, page]);
+
+  const loadMore = useCallback(() => {
+    if (!isLoadingMore && hasMore) {
+      setPage(prev => prev + 1);
+    }
+  }, [isLoadingMore, hasMore]);
 
   const toggleLike = async (outfitId: string) => {
     if (!user) {
@@ -150,7 +181,7 @@ export const useSharedOutfits = () => {
     }
 
     toast.success('Đã chia sẻ outfit thành công!');
-    await fetchSharedOutfits();
+    await fetchSharedOutfits(true);
     return true;
   };
 
@@ -178,16 +209,23 @@ export const useSharedOutfits = () => {
   }, [fetchUserLikes]);
 
   useEffect(() => {
-    fetchSharedOutfits();
-  }, [fetchSharedOutfits]);
+    if (page === 0) {
+      fetchSharedOutfits(true);
+    } else {
+      fetchSharedOutfits(false);
+    }
+  }, [page, userLikes]);
 
   return {
     sharedOutfits,
     isLoading,
+    isLoadingMore,
+    hasMore,
+    loadMore,
     shareOutfit,
     deleteOutfit,
     toggleLike,
     userLikes,
-    refetch: fetchSharedOutfits,
+    refetch: () => fetchSharedOutfits(true),
   };
 };
