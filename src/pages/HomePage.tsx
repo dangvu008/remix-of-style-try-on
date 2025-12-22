@@ -1,10 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, Users, History, Share2, Clock, Loader2, ImageOff, Filter, X } from 'lucide-react';
+import { TrendingUp, Users, History, Share2, Clock, Loader2, ImageOff, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ClothingCard } from '@/components/clothing/ClothingCard';
 import { SharedOutfitCard } from '@/components/outfit/SharedOutfitCard';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { sampleClothing } from '@/data/sampleClothing';
 import { ClothingItem, ClothingCategory } from '@/types/clothing';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,7 +62,6 @@ export const HomePage = ({ onNavigateToTryOn, onNavigateToCompare, onNavigateToH
   const [recentHistory, setRecentHistory] = useState<TryOnHistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<ClothingCategory | 'all'>('all');
-  const [showFilters, setShowFilters] = useState(false);
   const { sharedOutfits, isLoading: loadingSharedOutfits, toggleLike } = useSharedOutfits();
 
   useEffect(() => {
@@ -253,59 +259,31 @@ export const HomePage = ({ onNavigateToTryOn, onNavigateToCompare, onNavigateToH
 
       {/* Suggestions Section with Carousel */}
       <section className="animate-slide-up" style={{ animationDelay: '0.25s' }}>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-4">
           <h3 className="font-display font-bold text-lg text-foreground flex items-center gap-2">
             <TrendingUp size={20} className="text-primary" />
             Gợi ý cho bạn
           </h3>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={cn(
-              "gap-1.5 text-xs",
-              showFilters && "bg-primary/10 text-primary"
-            )}
-            onClick={() => setShowFilters(!showFilters)}
+          <Select
+            value={selectedFilter}
+            onValueChange={(value) => setSelectedFilter(value as ClothingCategory | 'all')}
           >
-            <Filter size={14} />
-            Lọc
-          </Button>
+            <SelectTrigger className="w-[120px] h-8 text-xs bg-secondary border-0">
+              <SelectValue placeholder="Lọc theo" />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border z-50">
+              {filterOptions.map((filter) => (
+                <SelectItem 
+                  key={filter.id} 
+                  value={filter.value}
+                  className="text-xs"
+                >
+                  {filter.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-
-        {/* Filter chips */}
-        {showFilters && (
-          <div className="flex gap-2 overflow-x-auto pb-3 -mx-4 px-4 scrollbar-hide animate-fade-in">
-            {filterOptions.map((filter) => (
-              <button
-                key={filter.id}
-                onClick={() => setSelectedFilter(filter.value)}
-                className={cn(
-                  "flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
-                  selectedFilter === filter.value
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                )}
-              >
-                {filter.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Active filter indicator */}
-        {selectedFilter !== 'all' && (
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs text-muted-foreground">
-              Đang lọc: {filterOptions.find(f => f.value === selectedFilter)?.label}
-            </span>
-            <button
-              onClick={() => setSelectedFilter('all')}
-              className="p-0.5 rounded-full bg-muted hover:bg-muted/80 transition-colors"
-            >
-              <X size={12} className="text-muted-foreground" />
-            </button>
-          </div>
-        )}
 
         {/* Carousel */}
         {filteredItems.length === 0 ? (
