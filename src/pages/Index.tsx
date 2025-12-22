@@ -48,7 +48,7 @@ const MainApp = () => {
       case 'profile':
         return <ProfilePage onNavigateToHistory={() => setActiveTab('history')} />;
       case 'history':
-        return <HistoryPage />;
+        return <HistoryPage onNavigateToCompare={() => setActiveTab('compare')} />;
       case 'wardrobe':
         return <WardrobePage onNavigateToTryOn={() => setActiveTab('tryOn')} />;
       default:
