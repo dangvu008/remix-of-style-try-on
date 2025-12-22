@@ -1,4 +1,4 @@
-import { Share2, Bell, User } from 'lucide-react';
+import { Bell, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -59,11 +59,6 @@ export const Header = ({
           {showNotification && (
             <Button variant="ghost" size="iconSm">
               <Bell size={18} />
-            </Button>
-          )}
-          {showShare && (
-            <Button variant="ghost" size="iconSm" onClick={onShare}>
-              <Share2 size={18} />
             </Button>
           )}
           
