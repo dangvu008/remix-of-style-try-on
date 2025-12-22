@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Save, Share2, Sparkles, Loader2, X, Download, Heart, Trash2 } from 'lucide-react';
+import { Camera, Save, Share2, Sparkles, Loader2, X, Download, Heart, Trash2, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CategorySidebar } from '@/components/clothing/CategorySidebar';
 import { ClothingCard } from '@/components/clothing/ClothingCard';
 import { TryOnCanvas } from '@/components/tryOn/TryOnCanvas';
 import { SelectedClothingList } from '@/components/tryOn/SelectedClothingList';
+import { EditClothingDialog } from '@/components/clothing/EditClothingDialog';
 import { sampleClothing } from '@/data/sampleClothing';
 import { ClothingItem, ClothingCategory } from '@/types/clothing';
 import { useAITryOn } from '@/hooks/useAITryOn';
@@ -41,10 +42,11 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
   const [aiResultImage, setAiResultImage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [pendingClothingToSave, setPendingClothingToSave] = useState<ClothingItem | null>(null);
+  const [editingClothing, setEditingClothing] = useState<ClothingItem | null>(null);
   
   const { processVirtualTryOn, isProcessing, clearResult } = useAITryOn();
   const { saveTryOnResult } = useTryOnHistory();
-  const { userClothing, saveClothingItem, deleteClothingItem, isSaving: isSavingClothing } = useUserClothing();
+  const { userClothing, saveClothingItem, updateClothingItem, deleteClothingItem, isSaving: isSavingClothing } = useUserClothing();
   const { user } = useAuth();
   const { t, language } = useLanguage();
   const { 
@@ -210,6 +212,18 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
 
   const handleDeleteSavedClothing = async (id: string) => {
     await deleteClothingItem(id);
+  };
+
+  const handleEditClothing = (item: ClothingItem) => {
+    setEditingClothing(item);
+  };
+
+  const handleUpdateClothing = async (id: string, updates: { name: string; tags: string[] }) => {
+    const success = await updateClothingItem(id, updates);
+    if (success) {
+      toast.success(t('clothing_updated'));
+    }
+    return success;
   };
 
   const handleAITryOn = async () => {
@@ -507,17 +521,28 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
                     onSelect={handleAddClothing}
                     isSelected={selectedItems.some(i => i.id === item.id)}
                   />
-                  {/* Delete button for saved clothing */}
+                  {/* Action buttons for saved clothing */}
                   {clothingSource === 'saved' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteSavedClothing(item.id);
-                      }}
-                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-soft"
-                    >
-                      <Trash2 size={10} />
-                    </button>
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditClothing(item);
+                        }}
+                        className="absolute -top-1 -left-1 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-soft"
+                      >
+                        <Edit2 size={10} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSavedClothing(item.id);
+                        }}
+                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-soft"
+                      >
+                        <Trash2 size={10} />
+                      </button>
+                    </>
                   )}
                 </div>
               ))
@@ -583,6 +608,17 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
           </Button>
         </div>
       </div>
+
+      {/* Edit Clothing Dialog */}
+      {editingClothing && (
+        <EditClothingDialog
+          item={editingClothing}
+          isOpen={!!editingClothing}
+          isSaving={isSavingClothing}
+          onClose={() => setEditingClothing(null)}
+          onSave={handleUpdateClothing}
+        />
+      )}
     </div>
   );
 };
