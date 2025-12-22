@@ -13,6 +13,7 @@ export interface ClothingItem {
   gender?: 'male' | 'female' | 'unisex' | 'unknown';
   style?: string;
   pattern?: string;
+  tags?: string[];
 }
 
 export interface Collection {

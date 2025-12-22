@@ -14,6 +14,7 @@ interface UserClothingRecord {
   gender: string | null;
   style: string | null;
   pattern: string | null;
+  tags: string[] | null;
   created_at: string;
 }
 
@@ -48,6 +49,7 @@ export const useUserClothing = () => {
         gender: record.gender as 'male' | 'female' | 'unisex' | 'unknown' | undefined,
         style: record.style || undefined,
         pattern: record.pattern || undefined,
+        tags: record.tags || [],
       }));
 
       setUserClothing(items);
@@ -81,6 +83,7 @@ export const useUserClothing = () => {
           gender: item.gender || null,
           style: item.style || null,
           pattern: item.pattern || null,
+          tags: item.tags || [],
         })
         .select()
         .single();
@@ -96,6 +99,7 @@ export const useUserClothing = () => {
         gender: data.gender as 'male' | 'female' | 'unisex' | 'unknown' | undefined,
         style: data.style || undefined,
         pattern: data.pattern || undefined,
+        tags: data.tags || [],
       };
 
       setUserClothing(prev => [newItem, ...prev]);
@@ -104,6 +108,40 @@ export const useUserClothing = () => {
     } catch (error) {
       console.error('Error saving clothing:', error);
       toast.error('Không thể lưu quần áo');
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  }, [user]);
+
+  const updateClothingItem = useCallback(async (
+    id: string, 
+    updates: { name?: string; tags?: string[] }
+  ): Promise<boolean> => {
+    if (!user) return false;
+
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('user_clothing')
+        .update({
+          name: updates.name,
+          tags: updates.tags,
+        })
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      setUserClothing(prev => prev.map(item => 
+        item.id === id 
+          ? { ...item, name: updates.name ?? item.name, tags: updates.tags ?? item.tags }
+          : item
+      ));
+      return true;
+    } catch (error) {
+      console.error('Error updating clothing:', error);
+      toast.error('Không thể cập nhật quần áo');
       return false;
     } finally {
       setIsSaving(false);
@@ -137,6 +175,7 @@ export const useUserClothing = () => {
     isLoading,
     isSaving,
     saveClothingItem,
+    updateClothingItem,
     deleteClothingItem,
     refetch: fetchUserClothing,
   };

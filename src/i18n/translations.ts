@@ -119,6 +119,12 @@ export const translations = {
     clothing_saved: 'Đã lưu',
     no_saved_clothing: 'Chưa có quần áo đã lưu',
     no_clothing: 'Không có quần áo',
+    edit_clothing: 'Chỉnh sửa',
+    clothing_name: 'Tên',
+    clothing_tags: 'Tags',
+    clothing_tags_hint: 'Nhập tag và nhấn Enter',
+    clothing_updated: 'Đã cập nhật quần áo!',
+    suggested_tags: 'Gợi ý:',
     
     // Settings
     language: 'Ngôn ngữ',
@@ -242,6 +248,12 @@ export const translations = {
     clothing_saved: 'Saved',
     no_saved_clothing: 'No saved clothing yet',
     no_clothing: 'No clothing',
+    edit_clothing: 'Edit',
+    clothing_name: 'Name',
+    clothing_tags: 'Tags',
+    clothing_tags_hint: 'Type tag and press Enter',
+    clothing_updated: 'Clothing updated!',
+    suggested_tags: 'Suggestions:',
     
     // Settings
     language: 'Language',
