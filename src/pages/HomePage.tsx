@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, History, Share2, ImageOff, ChevronDown } from 'lucide-react';
+import { Users, History, Share2, ImageOff, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SkeletonGrid, SkeletonStories } from '@/components/ui/skeleton-grid';
 import { sampleClothing } from '@/data/sampleClothing';
@@ -53,7 +53,27 @@ export const HomePage = ({ onNavigateToTryOn, onNavigateToCompare, onNavigateToH
   const [recentHistory, setRecentHistory] = useState<TryOnHistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<ClothingCategory | 'all'>('all');
-  const { sharedOutfits, isLoading: loadingSharedOutfits, toggleLike } = useSharedOutfits();
+  const { sharedOutfits, isLoading: loadingSharedOutfits, isLoadingMore, hasMore, loadMore, toggleLike } = useSharedOutfits();
+  
+  // Infinite scroll observer
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, loadMore]);
 
   useEffect(() => {
     if (user) {
@@ -318,15 +338,19 @@ export const HomePage = ({ onNavigateToTryOn, onNavigateToCompare, onNavigateToH
           </div>
         )}
         
-        {/* Load more hint */}
-        {(sharedOutfits.length > 0 || filteredItems.length > 0) && (
-          <div className="py-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Kéo xuống để xem thêm
-            </p>
-            <ChevronDown className="w-5 h-5 mx-auto mt-1 text-muted-foreground animate-bounce" />
-          </div>
-        )}
+        {/* Infinite scroll trigger */}
+        <div ref={loadMoreRef} className="py-6 text-center">
+          {isLoadingMore ? (
+            <div className="flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">Đang tải thêm...</span>
+            </div>
+          ) : hasMore ? (
+            <p className="text-sm text-muted-foreground">Cuộn để xem thêm</p>
+          ) : sharedOutfits.length > 0 ? (
+            <p className="text-sm text-muted-foreground">Đã hiển thị tất cả</p>
+          ) : null}
+        </div>
       </section>
     </div>
   );
