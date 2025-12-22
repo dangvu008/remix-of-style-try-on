@@ -114,6 +114,11 @@ export const translations = {
     msg_clothing_gender_male: 'Đồ nam',
     msg_clothing_gender_female: 'Đồ nữ',
     msg_clothing_gender_unisex: 'Unisex',
+    msg_save_clothing_question: 'Lưu quần áo này vào bộ sưu tập để dùng lại sau?',
+    clothing_sample: 'Mẫu',
+    clothing_saved: 'Đã lưu',
+    no_saved_clothing: 'Chưa có quần áo đã lưu',
+    no_clothing: 'Không có quần áo',
     
     // Settings
     language: 'Ngôn ngữ',
@@ -232,6 +237,11 @@ export const translations = {
     msg_clothing_gender_male: 'Menswear',
     msg_clothing_gender_female: 'Womenswear', 
     msg_clothing_gender_unisex: 'Unisex',
+    msg_save_clothing_question: 'Save this clothing to your collection for later use?',
+    clothing_sample: 'Sample',
+    clothing_saved: 'Saved',
+    no_saved_clothing: 'No saved clothing yet',
+    no_clothing: 'No clothing',
     
     // Settings
     language: 'Language',

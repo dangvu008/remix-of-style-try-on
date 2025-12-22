@@ -68,6 +68,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_clothing: {
+        Row: {
+          category: string
+          color: string | null
+          created_at: string
+          gender: string | null
+          id: string
+          image_url: string
+          name: string
+          pattern: string | null
+          style: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          color?: string | null
+          created_at?: string
+          gender?: string | null
+          id?: string
+          image_url: string
+          name: string
+          pattern?: string | null
+          style?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          color?: string | null
+          created_at?: string
+          gender?: string | null
+          id?: string
+          image_url?: string
+          name?: string
+          pattern?: string | null
+          style?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_collections: {
         Row: {
           cover_image_url: string | null
