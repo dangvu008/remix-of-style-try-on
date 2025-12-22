@@ -1,6 +1,9 @@
-import { Share2, Bell } from 'lucide-react';
+import { Share2, Bell, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import logoImage from '@/assets/logo.png';
 
 interface HeaderProps {
@@ -22,6 +25,23 @@ export const Header = ({
   onBack,
   onShare 
 }: HeaderProps) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleAvatarClick = () => {
+    navigate('/profile');
+  };
+
+  const getInitials = () => {
+    if (user?.user_metadata?.display_name) {
+      return user.user_metadata.display_name.charAt(0).toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border">
       <div className="flex items-center justify-between px-4 py-2 max-w-md mx-auto">
@@ -50,6 +70,19 @@ export const Header = ({
               <Share2 size={18} />
             </Button>
           )}
+          
+          {/* User Avatar */}
+          <button 
+            onClick={handleAvatarClick}
+            className="ml-1 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full"
+          >
+            <Avatar className="h-8 w-8 border-2 border-primary/20 hover:border-primary/50 transition-colors">
+              <AvatarImage src={user?.user_metadata?.avatar_url} alt="User avatar" />
+              <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                {user ? getInitials() : <User size={16} />}
+              </AvatarFallback>
+            </Avatar>
+          </button>
         </div>
       </div>
     </header>
