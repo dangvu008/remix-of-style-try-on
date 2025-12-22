@@ -361,31 +361,30 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
       return;
     }
 
-    const clothingItemsData: Array<{ imageUrl: string; name: string }> = [];
-    
-    for (const item of selectedItems) {
-      let imageData = item.imageUrl;
-      
-      if (item.imageUrl.startsWith('http')) {
-        try {
-          const response = await fetch(item.imageUrl);
-          const blob = await response.blob();
-          imageData = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(blob);
-          });
-        } catch (error) {
-          console.error('Error converting image:', error);
-          toast.error(`${t('msg_image_load_error')} ${item.name}`);
-          return;
-        }
-      }
-      
-      clothingItemsData.push({ imageUrl: imageData, name: item.name });
-    }
+    toast.info('Đang tối ưu hình ảnh...');
 
-    const result = await processVirtualTryOn(bodyImage, clothingItemsData);
+    // Import compression utilities
+    const { compressImageForAI, fetchAndCompressImage } = await import('@/utils/imageCompression');
+
+    // Process all images in parallel for speed
+    const [compressedBodyImage, ...compressedClothingResults] = await Promise.all([
+      // Compress body image (larger size for better quality)
+      compressImageForAI(bodyImage, 1024, 1024, 0.85),
+      // Compress all clothing images in parallel (smaller size for speed)
+      ...selectedItems.map(item => 
+        fetchAndCompressImage(item.imageUrl, 600, 600, 0.75)
+          .then(compressedUrl => ({ imageUrl: compressedUrl, name: item.name }))
+          .catch(error => {
+            console.error('Error compressing image:', error);
+            return { imageUrl: item.imageUrl, name: item.name };
+          })
+      )
+    ]);
+
+    const clothingItemsData = compressedClothingResults as Array<{ imageUrl: string; name: string }>;
+
+    console.log('Starting AI try-on with compressed images:', clothingItemsData.length, 'items');
+    const result = await processVirtualTryOn(compressedBodyImage, clothingItemsData);
     
     if (result?.success && result.generatedImage) {
       setAiResultImage(result.generatedImage);
