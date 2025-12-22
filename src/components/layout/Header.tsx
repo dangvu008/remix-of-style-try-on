@@ -23,20 +23,8 @@ export const Header = ({
 }: HeaderProps) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border">
-      <div className="flex items-center justify-between px-4 py-3 max-w-md mx-auto">
-        <div className="w-16 flex items-center">
-          {showBack && (
-            <Button variant="ghost" size="iconSm" onClick={onBack}>
-              <ArrowLeft size={20} />
-            </Button>
-          )}
-        </div>
-        
-        <h1 className="font-display font-bold text-lg text-foreground">
-          {title}
-        </h1>
-        
-        <div className="flex items-center gap-1 w-16 justify-end">
+      <div className="flex items-center justify-end px-4 py-3 max-w-md mx-auto">
+        <div className="flex items-center gap-1">
           {showLanguageSwitcher && <LanguageSwitcher />}
           {showNotification && (
             <Button variant="ghost" size="iconSm">
