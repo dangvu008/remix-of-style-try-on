@@ -5,6 +5,7 @@ import { ClothingCard } from '@/components/clothing/ClothingCard';
 import { TryOnCanvas } from '@/components/tryOn/TryOnCanvas';
 import { SelectedClothingList } from '@/components/tryOn/SelectedClothingList';
 import { EditClothingDialog } from '@/components/clothing/EditClothingDialog';
+import { AddClothingDialog } from '@/components/clothing/AddClothingDialog';
 import { sampleClothing } from '@/data/sampleClothing';
 import { ClothingItem, ClothingCategory } from '@/types/clothing';
 import { useAITryOn } from '@/hooks/useAITryOn';
@@ -55,6 +56,7 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
   const [pendingClothingToSave, setPendingClothingToSave] = useState<ClothingItem | null>(null);
   const [editingClothing, setEditingClothing] = useState<ClothingItem | null>(null);
   const [showClothingPanel, setShowClothingPanel] = useState(false);
+  const [showAddClothingDialog, setShowAddClothingDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   const { processVirtualTryOn, isProcessing, clearResult } = useAITryOn();
@@ -105,7 +107,17 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
   };
 
   const handleAddClothingFromDevice = () => {
-    clothingInputRef.current?.click();
+    setShowAddClothingDialog(true);
+  };
+
+  const handleClothingFromDialog = (item: ClothingItem) => {
+    handleAddClothing(item);
+  };
+
+  const handleSaveClothingFromDialog = (item: ClothingItem) => {
+    if (user) {
+      setPendingClothingToSave(item);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -717,6 +729,14 @@ export const TryOnPage = ({ initialItem }: TryOnPageProps) => {
           onSave={handleUpdateClothing}
         />
       )}
+
+      {/* Add Clothing Dialog */}
+      <AddClothingDialog
+        isOpen={showAddClothingDialog}
+        onClose={() => setShowAddClothingDialog(false)}
+        onAddClothing={handleClothingFromDialog}
+        onSaveToCollection={handleSaveClothingFromDialog}
+      />
     </div>
   );
 };
