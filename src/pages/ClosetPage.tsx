@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Shirt, Square, Crown, Footprints, Glasses, MoreHorizontal, Heart, ShoppingBag, Check, Search, Plus, Loader2 } from 'lucide-react';
+import { Shirt, Square, Crown, Footprints, Glasses, Heart, ShoppingBag, Check, Search, Plus, Loader2, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ClothingItem, ClothingCategory } from '@/types/clothing';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -24,13 +25,19 @@ interface UserClothingWithPurchased extends ClothingItem {
   is_purchased: boolean;
 }
 
-const categories: { id: ClothingCategory | 'all'; icon: React.ElementType; label: string }[] = [
-  { id: 'all', icon: MoreHorizontal, label: 'Tất cả' },
-  { id: 'top', icon: Shirt, label: 'Áo' },
-  { id: 'bottom', icon: Square, label: 'Quần' },
-  { id: 'dress', icon: Crown, label: 'Váy' },
-  { id: 'shoes', icon: Footprints, label: 'Giày' },
-  { id: 'accessory', icon: Glasses, label: 'Phụ kiện' },
+const categoryOptions = [
+  { id: 'all', label: 'Tất cả' },
+  { id: 'top', label: 'Áo' },
+  { id: 'bottom', label: 'Quần' },
+  { id: 'dress', label: 'Váy' },
+  { id: 'shoes', label: 'Giày' },
+  { id: 'accessory', label: 'Phụ kiện' },
+];
+
+const statusOptions = [
+  { id: 'all', label: 'Tất cả', icon: null },
+  { id: 'purchased', label: 'Đã mua', icon: Check },
+  { id: 'wishlist', label: 'Wishlist', icon: ShoppingBag },
 ];
 
 interface ClosetPageProps {
@@ -220,64 +227,58 @@ export const ClosetPage = ({ onNavigateToTryOn }: ClosetPageProps) => {
 
           {/* Clothing Tab */}
           <TabsContent value="clothing" className="space-y-4 mt-4">
-            {/* Search */}
-            <div className="relative">
-              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input 
-                placeholder="Tìm kiếm quần áo..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+            {/* Search + Filters Row */}
+            <div className="space-y-3">
+              {/* Search */}
+              <div className="relative">
+                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input 
+                  placeholder="Tìm kiếm quần áo..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
 
-            {/* Purchase Filter */}
-            <div className="flex gap-2">
-              <Button 
-                variant={purchaseFilter === 'all' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setPurchaseFilter('all')}
-              >
-                Tất cả
-              </Button>
-              <Button 
-                variant={purchaseFilter === 'purchased' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setPurchaseFilter('purchased')}
-                className="gap-1"
-              >
-                <Check size={14} />
-                Đã mua
-              </Button>
-              <Button 
-                variant={purchaseFilter === 'wishlist' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setPurchaseFilter('wishlist')}
-                className="gap-1"
-              >
-                <ShoppingBag size={14} />
-                Wishlist
-              </Button>
-            </div>
+              {/* Compact Filters */}
+              <div className="flex gap-2">
+                {/* Category Dropdown */}
+                <Select value={activeCategory} onValueChange={(v) => setActiveCategory(v as ClothingCategory | 'all')}>
+                  <SelectTrigger className="w-[120px] h-9">
+                    <SelectValue placeholder="Danh mục" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categoryOptions.map(cat => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-            {/* Category Filter */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {categories.map(cat => {
-                const Icon = cat.icon;
-                const isActive = activeCategory === cat.id;
-                return (
-                  <Button
-                    key={cat.id}
-                    variant={isActive ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setActiveCategory(cat.id)}
-                    className="flex-shrink-0 gap-1"
-                  >
-                    <Icon size={14} />
-                    {cat.label}
-                  </Button>
-                );
-              })}
+                {/* Status Filter Chips */}
+                <div className="flex gap-1.5 flex-1">
+                  {statusOptions.map(status => {
+                    const isActive = purchaseFilter === status.id;
+                    const Icon = status.icon;
+                    return (
+                      <button
+                        key={status.id}
+                        onClick={() => setPurchaseFilter(status.id as 'all' | 'purchased' | 'wishlist')}
+                        className={cn(
+                          "flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+                          isActive 
+                            ? "bg-primary text-primary-foreground shadow-sm" 
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        )}
+                      >
+                        {Icon && <Icon size={12} />}
+                        {status.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* Clothing Grid */}
