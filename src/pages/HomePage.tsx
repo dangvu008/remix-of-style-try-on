@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sparkles, TrendingUp, Heart, ArrowRight, Scale, History, Share2, Clock, Loader2, ImageOff } from 'lucide-react';
+import { TrendingUp, Heart, Scale, History, Share2, Clock, Loader2, ImageOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ClothingCard } from '@/components/clothing/ClothingCard';
 import { sampleClothing } from '@/data/sampleClothing';
@@ -107,53 +107,6 @@ export const HomePage = ({ onNavigateToTryOn, onNavigateToCompare, onNavigateToH
 
   return (
     <div className="pb-24 pt-16 px-4 space-y-6 max-w-md mx-auto">
-      {/* Hero section */}
-      <section className="relative rounded-3xl overflow-hidden gradient-primary p-6 shadow-glow animate-slide-up">
-        <div className="relative z-10">
-          <h2 className="text-xl font-display font-bold text-primary-foreground mb-2">
-            Thử đồ ngay tại nhà
-          </h2>
-          <p className="text-sm text-primary-foreground/80 mb-4">
-            Ghép ảnh quần áo với ảnh của bạn để xem trước khi mua
-          </p>
-          <Button
-            onClick={onNavigateToTryOn}
-            variant="secondary"
-            className="group"
-          >
-            Bắt đầu thử đồ
-            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </div>
-        <div className="absolute -right-4 -bottom-4 opacity-20">
-          <Sparkles size={120} />
-        </div>
-      </section>
-
-      {/* Quick actions */}
-      <section className="grid grid-cols-2 gap-3 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-        <button 
-          onClick={onNavigateToTryOn}
-          className="bg-card rounded-2xl p-4 shadow-soft border border-border hover:border-primary/50 hover:shadow-medium transition-all duration-300 text-left group"
-        >
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <Sparkles size={20} className="text-primary-foreground" />
-          </div>
-          <h3 className="font-semibold text-foreground">Phòng thử đồ</h3>
-          <p className="text-xs text-muted-foreground mt-1">Thử ngay với AI</p>
-        </button>
-        
-        <button 
-          onClick={onNavigateToCompare}
-          className="bg-card rounded-2xl p-4 shadow-soft border border-border hover:border-accent/50 hover:shadow-medium transition-all duration-300 text-left group"
-        >
-          <div className="w-10 h-10 rounded-xl gradient-warm flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <Scale size={20} className="text-accent-foreground" />
-          </div>
-          <h3 className="font-semibold text-foreground">So sánh Outfit</h3>
-          <p className="text-xs text-muted-foreground mt-1">Xem cạnh nhau</p>
-        </button>
-      </section>
 
       {/* Recent History Section */}
       <section className="animate-slide-up" style={{ animationDelay: '0.15s' }}>
