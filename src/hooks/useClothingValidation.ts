@@ -59,7 +59,8 @@ const mapToAppCategory = (aiCategory: string): ClothingCategory => {
     case 'dress': return 'dress';
     case 'shoes': return 'shoes';
     case 'accessory': return 'accessory';
-    default: return 'top';
+    case 'unknown': return 'unknown' as ClothingCategory;
+    default: return 'unknown' as ClothingCategory;
   }
 };
 
