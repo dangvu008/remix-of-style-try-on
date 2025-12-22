@@ -64,34 +64,62 @@ serve(async (req) => {
     const clothingNames = items.map(i => i.name).join(', ');
     const clothingList = items.map((item, idx) => `${idx + 1}. ${item.name}`).join('\n');
 
-    // Use Lovable AI Gateway - Use faster model first
-    const basePrompt = `VIRTUAL FASHION TRY-ON
+    // Use Lovable AI Gateway with improved prompt for accuracy
+    const basePrompt = `VIRTUAL CLOTHING TRY-ON - STRICT ACCURACY REQUIRED
 
-RULES:
-1. PRESERVE the person in IMAGE A exactly - same face, body, pose, background.
-2. DRESS them with these items: ${clothingNames}
-3. Extract clothing from reference images (ignore mannequins/other people).
-4. Make it photorealistic with natural fabric physics.
+YOU MUST FOLLOW THESE RULES EXACTLY:
 
-OUTPUT: ONE image of the person wearing all specified items.`;
+1. IDENTITY PRESERVATION (CRITICAL):
+   - Keep the EXACT same face, hair, skin tone, body shape from the original photo
+   - Keep the EXACT same pose and background
+
+2. CLOTHING PLACEMENT (CRITICAL):
+   - SHOES must be WORN ON THE FEET of the person, NOT floating or placed beside them
+   - TOPS/SHIRTS must replace the current top the person is wearing
+   - BOTTOMS/PANTS must replace the current bottom the person is wearing
+   - ACCESSORIES must be worn properly (hats on head, bags on shoulder, etc.)
+
+3. COLOR & DESIGN ACCURACY (CRITICAL):
+   - Each clothing item MUST have the EXACT SAME COLOR as shown in its reference image
+   - Each clothing item MUST have the EXACT SAME PATTERN/DESIGN as its reference
+   - Do NOT change or blend colors - use the EXACT colors from the clothing reference images
+
+4. REALISM:
+   - Natural fabric draping and shadows
+   - Proper perspective matching the body pose
+   - Seamless integration - should look like a real photo
+
+CLOTHING TO APPLY: ${clothingNames}
+
+OUTPUT: Generate ONE photorealistic image showing the person WEARING all specified items correctly.`;
 
     // Build content array with body image first, then clothing images
     const contentArray: Array<{ type: string; text?: string; image_url?: { url: string } }> = [
       { type: "text", text: basePrompt },
-      { type: "text", text: "IMAGE A (person to dress):" },
+      { type: "text", text: "=== ORIGINAL PHOTO (keep this person's face and body) ===" },
       { type: "image_url", image_url: { url: bodyImage } },
+      { type: "text", text: "=== CLOTHING ITEMS (apply these to the person) ===" },
     ];
 
-    // Add clothing items
+    // Add clothing items with more specific instructions
     items.forEach((item, idx) => {
-      contentArray.push({ type: "text", text: `ITEM ${idx + 1}: ${item.name}` });
+      const itemType = item.name.toLowerCase();
+      let placement = "wear on body";
+      if (itemType.includes('giày') || itemType.includes('shoe') || itemType.includes('sneaker') || itemType.includes('boot')) {
+        placement = "MUST BE WORN ON THE FEET - not beside or floating";
+      } else if (itemType.includes('áo') || itemType.includes('shirt') || itemType.includes('top') || itemType.includes('jacket')) {
+        placement = "replace current top clothing";
+      } else if (itemType.includes('quần') || itemType.includes('pant') || itemType.includes('short') || itemType.includes('jean')) {
+        placement = "replace current bottom clothing";
+      }
+      contentArray.push({ type: "text", text: `ITEM ${idx + 1}: "${item.name}" - ${placement}. Use EXACT color from this image:` });
       contentArray.push({ type: "image_url", image_url: { url: item.imageUrl } });
     });
 
-    // Use faster model first, then fall back to more capable one
+    // Use more capable model first for better accuracy
     const attempts: Array<{ model: string }> = [
-      { model: "google/gemini-2.5-flash-image-preview" },
       { model: "google/gemini-3-pro-image-preview" },
+      { model: "google/gemini-2.5-flash-image-preview" },
     ];
 
     let lastTextResponse: string | undefined;
