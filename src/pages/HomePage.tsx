@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Heart, Scale, History, Share2, Clock, Loader2, ImageOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { TrendingUp, Users, History, Share2, Clock, Loader2, ImageOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ClothingCard } from '@/components/clothing/ClothingCard';
+import { SharedOutfitCard } from '@/components/outfit/SharedOutfitCard';
 import { sampleClothing } from '@/data/sampleClothing';
 import { ClothingItem } from '@/types/clothing';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSharedOutfits } from '@/hooks/useSharedOutfits';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -29,10 +32,12 @@ interface HomePageProps {
 }
 
 export const HomePage = ({ onNavigateToTryOn, onNavigateToCompare, onNavigateToHistory, onSelectItem }: HomePageProps) => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [clothing, setClothing] = useState(sampleClothing);
   const [recentHistory, setRecentHistory] = useState<TryOnHistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const { sharedOutfits, isLoading: loadingSharedOutfits } = useSharedOutfits();
 
   useEffect(() => {
     if (user) {
@@ -101,6 +106,10 @@ export const HomePage = ({ onNavigateToTryOn, onNavigateToCompare, onNavigateToH
         c.id === item.id ? { ...c, isFavorite: !c.isFavorite } : c
       )
     );
+  };
+
+  const handleViewOutfitDetail = (outfitId: string) => {
+    navigate(`/outfit/${outfitId}`);
   };
 
   const featuredItems = clothing.slice(0, 4);
@@ -187,45 +196,38 @@ export const HomePage = ({ onNavigateToTryOn, onNavigateToCompare, onNavigateToH
         )}
       </section>
 
-      {/* Share Favorites Section */}
-      {user && recentHistory.length > 0 && (
-        <section className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-          <div className="bg-gradient-to-br from-accent/10 to-primary/10 rounded-2xl p-4 border border-border">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl gradient-accent flex items-center justify-center shadow-soft">
-                <Heart size={20} className="text-accent-foreground" />
-              </div>
-              <div>
-                <h3 className="font-display font-bold text-foreground text-sm">
-                  Chia sẻ outfit yêu thích
-                </h3>
-                <p className="text-muted-foreground text-xs">
-                  Gửi cho bạn bè xem outfit của bạn
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex gap-2">
-              {recentHistory.slice(0, 3).map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleShareOutfit(item)}
-                  className="flex-1 aspect-[3/4] rounded-lg overflow-hidden bg-secondary relative group"
-                >
-                  <img
-                    src={item.result_image_url}
-                    alt="Outfit"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Share2 size={16} className="text-primary-foreground" />
-                  </div>
-                </button>
-              ))}
-            </div>
+      {/* Shared Outfits Section */}
+      <section className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-display font-bold text-lg text-foreground flex items-center gap-2">
+            <Users size={20} className="text-primary" />
+            Outfit được chia sẻ
+          </h3>
+        </div>
+
+        {loadingSharedOutfits ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
-        </section>
-      )}
+        ) : sharedOutfits.length === 0 ? (
+          <div className="bg-card rounded-2xl p-6 text-center border border-border">
+            <Users size={32} className="mx-auto text-muted-foreground mb-3" />
+            <p className="text-muted-foreground text-sm">
+              Chưa có outfit nào được chia sẻ
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {sharedOutfits.slice(0, 4).map((outfit) => (
+              <SharedOutfitCard
+                key={outfit.id}
+                outfit={outfit}
+                onClick={() => handleViewOutfitDetail(outfit.id)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Suggestions Section */}
       <section className="animate-slide-up" style={{ animationDelay: '0.25s' }}>
