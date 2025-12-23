@@ -30,6 +30,64 @@ interface SharedOutfit {
 
 const PAGE_SIZE = 10;
 
+// Sample community outfits for display when no real data exists
+const sampleCommunityOutfits: SharedOutfit[] = [
+  {
+    id: 'sample-outfit-1',
+    title: 'Outfit công sở thanh lịch',
+    description: 'Phối đồ công sở với áo sơ mi trắng và quần tây đen',
+    result_image_url: 'https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=600',
+    likes_count: 128,
+    comments_count: 15,
+    is_featured: true,
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    user_id: 'sample-user-1',
+    clothing_items: [
+      { name: 'Áo sơ mi trắng', imageUrl: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=300', price: '350.000đ', shopUrl: 'https://shopee.vn' },
+      { name: 'Quần tây đen', imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=300', price: '480.000đ', shopUrl: 'https://lazada.vn' }
+    ],
+    user_profile: { display_name: 'Minh Anh', avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100' },
+    isLiked: false,
+    isSaved: false,
+  },
+  {
+    id: 'sample-outfit-2',
+    title: 'Street style năng động',
+    description: 'Phong cách đường phố với hoodie và sneaker',
+    result_image_url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600',
+    likes_count: 95,
+    comments_count: 8,
+    is_featured: false,
+    created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+    user_id: 'sample-user-2',
+    clothing_items: [
+      { name: 'Hoodie đen', imageUrl: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=300', price: '420.000đ', shopUrl: 'https://shopee.vn' },
+      { name: 'Giày sneaker', imageUrl: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300', price: '890.000đ', shopUrl: 'https://tiki.vn' }
+    ],
+    user_profile: { display_name: 'Đức Anh', avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100' },
+    isLiked: false,
+    isSaved: false,
+  },
+  {
+    id: 'sample-outfit-3',
+    title: 'Váy hoa đi dạo phố',
+    description: 'Nữ tính và dịu dàng với váy hoa nhí',
+    result_image_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600',
+    likes_count: 156,
+    comments_count: 22,
+    is_featured: true,
+    created_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+    user_id: 'sample-user-3',
+    clothing_items: [
+      { name: 'Váy midi hoa', imageUrl: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=300', price: '520.000đ', shopUrl: 'https://lazada.vn' },
+      { name: 'Túi xách', imageUrl: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=300', price: '650.000đ', shopUrl: 'https://shopee.vn' }
+    ],
+    user_profile: { display_name: 'Thu Hà', avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100' },
+    isLiked: false,
+    isSaved: false,
+  },
+];
+
 export const useOutfitFeed = () => {
   const { user } = useAuth();
   const [outfits, setOutfits] = useState<SharedOutfit[]>([]);
@@ -131,8 +189,17 @@ export const useOutfitFeed = () => {
         isSaved: savedOutfitIds.has(outfit.id),
       }));
 
-      if (isInitial) {
-        setOutfits(formattedOutfits);
+      // Add sample outfits if no real data or for initial display
+      if (isInitial && formattedOutfits.length === 0) {
+        setOutfits(sampleCommunityOutfits);
+      } else if (isInitial) {
+        // Combine real outfits with sample outfits
+        const combinedOutfits = [...formattedOutfits];
+        if (combinedOutfits.length < 3) {
+          const samplesToAdd = sampleCommunityOutfits.slice(0, 3 - combinedOutfits.length);
+          combinedOutfits.push(...samplesToAdd);
+        }
+        setOutfits(combinedOutfits);
       } else {
         setOutfits(prev => [...prev, ...formattedOutfits]);
       }
@@ -145,6 +212,10 @@ export const useOutfitFeed = () => {
       }
     } catch (error) {
       console.error('Error fetching outfits:', error);
+      // On error, show sample outfits
+      if (isInitial) {
+        setOutfits(sampleCommunityOutfits);
+      }
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);

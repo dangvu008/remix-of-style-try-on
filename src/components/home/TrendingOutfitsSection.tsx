@@ -40,9 +40,9 @@ export const TrendingOutfitsSection = ({
   if (isLoading) {
     return (
       <section className="py-4">
-        <div className="flex items-center gap-2 px-4 mb-3">
-          <TrendingUp className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold">Trending Outfits</h2>
+        <div className="flex items-center gap-2 px-4 mb-2">
+          <TrendingUp className="w-4 h-4 text-primary" />
+          <h2 className="text-sm font-semibold">Trending Outfits</h2>
         </div>
         <div className="flex gap-3 px-4 overflow-x-auto scrollbar-hide">
           {[1, 2, 3, 4].map((i) => (
@@ -57,10 +57,10 @@ export const TrendingOutfitsSection = ({
 
   return (
     <section className="py-4 relative group">
-      <div className="flex items-center gap-2 px-4 mb-3">
-        <TrendingUp className="w-5 h-5 text-primary" />
-        <h2 className="text-lg font-bold">Trending Outfits</h2>
-        <span className="text-xs text-muted-foreground ml-auto">
+      <div className="flex items-center gap-2 px-4 mb-2">
+        <TrendingUp className="w-4 h-4 text-primary" />
+        <h2 className="text-sm font-semibold">Trending Outfits</h2>
+        <span className="text-[10px] text-muted-foreground ml-auto">
           {outfits.length} outfit được yêu thích
         </span>
       </div>
