@@ -6,28 +6,34 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSavedOutfits } from '@/hooks/useSavedOutfits';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
-import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { formatDistanceToNow, Locale } from 'date-fns';
+import { vi, enUS, zhCN, ko, ja, th } from 'date-fns/locale';
 
 interface SavedOutfitsPageProps {
   onNavigateBack: () => void;
 }
 
+const localeMap: Record<string, Locale> = { vi, en: enUS, zh: zhCN, ko, ja, th };
+
 export const SavedOutfitsPage = ({ onNavigateBack }: SavedOutfitsPageProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const { savedOutfits, hiddenOutfits, isLoading, unsaveOutfit, unhideOutfit } = useSavedOutfits();
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const dateLocale = localeMap[language] || enUS;
 
   const handleUnsave = async (outfitId: string) => {
     setRemovingId(outfitId);
     const success = await unsaveOutfit(outfitId);
     setRemovingId(null);
     if (success) {
-      toast.success('Đã bỏ lưu outfit');
+      toast.success(t('saved_outfits_unsaved'));
     } else {
-      toast.error('Không thể bỏ lưu outfit');
+      toast.error(t('saved_outfits_cannot_unsave'));
     }
   };
 
@@ -36,9 +42,9 @@ export const SavedOutfitsPage = ({ onNavigateBack }: SavedOutfitsPageProps) => {
     const success = await unhideOutfit(outfitId);
     setRemovingId(null);
     if (success) {
-      toast.success('Đã bỏ ẩn outfit');
+      toast.success(t('saved_outfits_unhidden'));
     } else {
-      toast.error('Không thể bỏ ẩn outfit');
+      toast.error(t('saved_outfits_cannot_unhide'));
     }
   };
 
@@ -53,15 +59,15 @@ export const SavedOutfitsPage = ({ onNavigateBack }: SavedOutfitsPageProps) => {
           <button onClick={onNavigateBack} className="p-2 -ml-2 hover:bg-secondary rounded-full">
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-xl font-bold">Outfit đã lưu</h1>
+          <h1 className="text-xl font-bold">{t('saved_outfits_title')}</h1>
         </div>
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <Bookmark size={48} className="text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Vui lòng đăng nhập</h3>
+          <h3 className="text-lg font-semibold mb-2">{t('saved_outfits_please_login')}</h3>
           <p className="text-muted-foreground text-sm mb-4">
-            Đăng nhập để xem outfit đã lưu
+            {t('saved_outfits_login_to_view')}
           </p>
-          <Button onClick={() => navigate('/auth')}>Đăng nhập</Button>
+          <Button onClick={() => navigate('/auth')}>{t('login')}</Button>
         </div>
       </div>
     );
@@ -74,18 +80,18 @@ export const SavedOutfitsPage = ({ onNavigateBack }: SavedOutfitsPageProps) => {
         <button onClick={onNavigateBack} className="p-2 -ml-2 hover:bg-secondary rounded-full transition-colors">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold">Bộ sưu tập</h1>
+        <h1 className="text-xl font-bold">{t('saved_outfits_collection')}</h1>
       </div>
 
       <Tabs defaultValue="saved" className="px-4">
         <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="saved" className="gap-2">
             <Bookmark size={16} />
-            Đã lưu ({savedOutfits.length})
+            {t('saved_outfits_saved')} ({savedOutfits.length})
           </TabsTrigger>
           <TabsTrigger value="hidden" className="gap-2">
             <EyeOff size={16} />
-            Đã ẩn ({hiddenOutfits.length})
+            {t('saved_outfits_hidden')} ({hiddenOutfits.length})
           </TabsTrigger>
         </TabsList>
 
@@ -99,9 +105,9 @@ export const SavedOutfitsPage = ({ onNavigateBack }: SavedOutfitsPageProps) => {
           ) : savedOutfits.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Bookmark size={48} className="text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Chưa có outfit nào</h3>
+              <h3 className="text-lg font-semibold mb-2">{t('saved_outfits_no_outfit')}</h3>
               <p className="text-muted-foreground text-sm">
-                Lưu outfit yêu thích từ trang chủ để xem lại sau
+                {t('saved_outfits_save_from_home')}
               </p>
             </div>
           ) : (
@@ -135,7 +141,7 @@ export const SavedOutfitsPage = ({ onNavigateBack }: SavedOutfitsPageProps) => {
                           {outfit.likes_count}
                         </span>
                         <span>
-                          {formatDistanceToNow(new Date(outfit.saved_at), { locale: vi, addSuffix: true })}
+                          {formatDistanceToNow(new Date(outfit.saved_at), { locale: dateLocale, addSuffix: true })}
                         </span>
                       </div>
                     </div>
@@ -169,9 +175,9 @@ export const SavedOutfitsPage = ({ onNavigateBack }: SavedOutfitsPageProps) => {
           ) : hiddenOutfits.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <EyeOff size={48} className="text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Không có outfit ẩn</h3>
+              <h3 className="text-lg font-semibold mb-2">{t('saved_outfits_no_hidden')}</h3>
               <p className="text-muted-foreground text-sm">
-                Các outfit bạn ẩn sẽ không hiển thị trên feed
+                {t('saved_outfits_hidden_not_show')}
               </p>
             </div>
           ) : (
@@ -193,7 +199,7 @@ export const SavedOutfitsPage = ({ onNavigateBack }: SavedOutfitsPageProps) => {
                       {outfit.title}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Ẩn {formatDistanceToNow(new Date(outfit.hidden_at), { locale: vi, addSuffix: true })}
+                      {t('saved_outfits_hidden_ago').replace('{time}', formatDistanceToNow(new Date(outfit.hidden_at), { locale: dateLocale }))}
                     </p>
                   </div>
                   <Button
@@ -208,7 +214,7 @@ export const SavedOutfitsPage = ({ onNavigateBack }: SavedOutfitsPageProps) => {
                     ) : (
                       <>
                         <Eye size={14} />
-                        Bỏ ẩn
+                        {t('saved_outfits_unhide')}
                       </>
                     )}
                   </Button>

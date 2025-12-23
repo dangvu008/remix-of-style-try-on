@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { X, Plus, ChevronLeft, ChevronRight, Scale, Trash2, ExternalLink, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCompare, SavedOutfit } from '@/contexts/CompareContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { sampleClothing } from '@/data/sampleClothing';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -40,6 +41,7 @@ const sampleOutfits: SavedOutfit[] = [
 
 export const ComparePage = () => {
   const { outfitsToCompare, addToCompare, removeFromCompare, clearCompare, isInCompare } = useCompare();
+  const { t } = useLanguage();
   const [showAddSheet, setShowAddSheet] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -53,20 +55,20 @@ export const ComparePage = () => {
 
   const handleAddOutfit = (outfit: SavedOutfit) => {
     if (outfitsToCompare.length >= 4) {
-      toast.error('Chỉ có thể so sánh tối đa 4 outfit');
+      toast.error(t('compare_max'));
       return;
     }
     addToCompare(outfit);
-    toast.success(`Đã thêm "${outfit.name}" vào so sánh`);
+    toast.success(t('compare_added').replace('{name}', outfit.name));
   };
 
   const handleRemoveOutfit = (outfitId: string) => {
     removeFromCompare(outfitId);
-    toast.success('Đã xóa khỏi so sánh');
+    toast.success(t('compare_removed'));
   };
 
   const handleShare = () => {
-    toast.success('Đã sao chép link so sánh!');
+    toast.success(t('compare_copied'));
   };
 
   return (
@@ -77,10 +79,10 @@ export const ComparePage = () => {
           <Scale size={28} className="text-primary-foreground" />
         </div>
         <h2 className="font-display font-bold text-xl text-foreground mb-1">
-          So sánh Outfit
+          {t('compare_title')}
         </h2>
         <p className="text-muted-foreground text-sm">
-          {outfitsToCompare.length}/4 outfit đang so sánh
+          {outfitsToCompare.length}/4 {t('compare_comparing')}
         </p>
       </section>
 
@@ -90,14 +92,14 @@ export const ComparePage = () => {
           <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center">
             <Scale size={48} className="mx-auto text-muted-foreground/30 mb-4" />
             <p className="text-muted-foreground font-medium mb-2">
-              Chưa có outfit nào để so sánh
+              {t('compare_no_outfit')}
             </p>
             <p className="text-sm text-muted-foreground mb-4">
-              Thêm các outfit đã lưu để so sánh cạnh nhau
+              {t('compare_add_saved')}
             </p>
             <Button onClick={() => setShowAddSheet(true)}>
               <Plus size={18} />
-              Thêm outfit
+              {t('compare_add_outfit')}
             </Button>
           </div>
         </section>
@@ -175,7 +177,7 @@ export const ComparePage = () => {
                       {outfit.name}
                     </h4>
                     <p className="text-xs text-muted-foreground mb-2">
-                      {outfit.items.length} món đồ
+                      {outfit.items.length} {t('compare_items')}
                     </p>
                     
                     {/* Clothing items mini preview */}
@@ -202,7 +204,7 @@ export const ComparePage = () => {
                     {/* Price info */}
                     {outfit.items.some(i => i.price) && (
                       <div className="mt-2 pt-2 border-t border-border">
-                        <p className="text-xs text-muted-foreground">Tổng giá:</p>
+                        <p className="text-xs text-muted-foreground">{t('compare_total_price')}</p>
                         <p className="text-sm font-bold text-primary">
                           {outfit.items
                             .filter(i => i.price)
@@ -228,7 +230,7 @@ export const ComparePage = () => {
                   )}
                 >
                   <Plus size={24} />
-                  <span className="text-xs mt-1">Thêm</span>
+                  <span className="text-xs mt-1">{t('compare_add')}</span>
                 </button>
               )}
             </div>
@@ -243,7 +245,7 @@ export const ComparePage = () => {
                 onClick={clearCompare}
               >
                 <Trash2 size={16} />
-                Xóa tất cả
+                {t('compare_delete_all')}
               </Button>
               <Button
                 variant="default"
@@ -251,7 +253,7 @@ export const ComparePage = () => {
                 onClick={handleShare}
               >
                 <Share2 size={16} />
-                Chia sẻ
+                {t('share')}
               </Button>
             </div>
           </section>
@@ -263,7 +265,7 @@ export const ComparePage = () => {
         <div className="fixed inset-0 z-50 bg-foreground/80 backdrop-blur-sm animate-scale-in">
           <div className="absolute bottom-0 left-0 right-0 bg-card rounded-t-3xl max-h-[70vh] overflow-hidden animate-slide-up">
             <div className="p-4 border-b border-border flex items-center justify-between">
-              <h3 className="font-display font-bold text-lg">Chọn outfit để so sánh</h3>
+              <h3 className="font-display font-bold text-lg">{t('compare_select_outfit')}</h3>
               <Button
                 variant="ghost"
                 size="iconSm"
@@ -311,7 +313,7 @@ export const ComparePage = () => {
                     <div className="flex-1 text-left">
                       <h4 className="font-semibold text-foreground">{outfit.name}</h4>
                       <p className="text-sm text-muted-foreground">
-                        {outfit.items.length} món đồ
+                        {outfit.items.length} {t('compare_items')}
                       </p>
                       {outfit.items.some(i => i.price) && (
                         <p className="text-sm font-medium text-primary mt-1">
@@ -327,7 +329,7 @@ export const ComparePage = () => {
                     {/* Status */}
                     <div className="flex-shrink-0">
                       {isAdded ? (
-                        <span className="text-xs text-primary font-medium">Đã thêm</span>
+                        <span className="text-xs text-primary font-medium">{t('compare_already_added')}</span>
                       ) : (
                         <Plus size={20} className="text-muted-foreground" />
                       )}

@@ -3,6 +3,7 @@ import { Heart, Plus, Trash2, Share2, FolderPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ClothingCard } from '@/components/clothing/ClothingCard';
 import { sampleClothing, sampleCollections } from '@/data/sampleClothing';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { ClothingItem, Collection } from '@/types/clothing';
 import { toast } from 'sonner';
 
@@ -11,6 +12,7 @@ interface FavoritesPageProps {
 }
 
 export const FavoritesPage = ({ onSelectItem }: FavoritesPageProps) => {
+  const { t } = useLanguage();
   const [clothing, setClothing] = useState(sampleClothing);
   const [collections, setCollections] = useState(sampleCollections);
   const [activeTab, setActiveTab] = useState<'items' | 'collections'>('items');
@@ -23,27 +25,27 @@ export const FavoritesPage = ({ onSelectItem }: FavoritesPageProps) => {
         c.id === item.id ? { ...c, isFavorite: !c.isFavorite } : c
       )
     );
-    toast.success(item.isFavorite ? 'Đã bỏ yêu thích' : 'Đã thêm vào yêu thích');
+    toast.success(item.isFavorite ? t('favorites_removed') : t('favorites_added'));
   };
 
   const handleCreateCollection = () => {
     const newCollection: Collection = {
       id: Date.now().toString(),
-      name: `Bộ sưu tập ${collections.length + 1}`,
+      name: `${t('profile_collections')} ${collections.length + 1}`,
       items: [],
       createdAt: new Date(),
     };
     setCollections(prev => [...prev, newCollection]);
-    toast.success('Đã tạo bộ sưu tập mới!');
+    toast.success(t('favorites_collection_created'));
   };
 
   const handleDeleteCollection = (id: string) => {
     setCollections(prev => prev.filter(c => c.id !== id));
-    toast.success('Đã xóa bộ sưu tập');
+    toast.success(t('favorites_collection_deleted'));
   };
 
   const handleShareCollection = () => {
-    toast.success('Đã sao chép link chia sẻ!');
+    toast.success(t('favorites_link_copied'));
   };
 
   return (
@@ -54,10 +56,10 @@ export const FavoritesPage = ({ onSelectItem }: FavoritesPageProps) => {
           <Heart size={32} className="text-accent-foreground fill-accent-foreground" />
         </div>
         <h2 className="font-display font-bold text-2xl text-foreground mb-2">
-          Yêu thích của bạn
+          {t('favorites_title')}
         </h2>
         <p className="text-muted-foreground text-sm">
-          {favoriteItems.length} món • {collections.length} bộ sưu tập
+          {favoriteItems.length} {t('favorites_items')} • {collections.length} {t('favorites_collections')}
         </p>
       </section>
 
@@ -71,7 +73,7 @@ export const FavoritesPage = ({ onSelectItem }: FavoritesPageProps) => {
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          Món đồ ({favoriteItems.length})
+          {t('favorites_items')} ({favoriteItems.length})
         </button>
         <button
           onClick={() => setActiveTab('collections')}
@@ -81,7 +83,7 @@ export const FavoritesPage = ({ onSelectItem }: FavoritesPageProps) => {
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          Bộ sưu tập ({collections.length})
+          {t('profile_collections')} ({collections.length})
         </button>
       </div>
 
@@ -91,9 +93,9 @@ export const FavoritesPage = ({ onSelectItem }: FavoritesPageProps) => {
           {favoriteItems.length === 0 ? (
             <div className="text-center py-12">
               <Heart size={48} className="mx-auto text-muted-foreground/30 mb-4" />
-              <p className="text-muted-foreground">Chưa có món đồ yêu thích</p>
+              <p className="text-muted-foreground">{t('favorites_no_item')}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Nhấn vào trái tim để thêm
+                {t('favorites_tap_heart')}
               </p>
             </div>
           ) : (
@@ -119,7 +121,7 @@ export const FavoritesPage = ({ onSelectItem }: FavoritesPageProps) => {
             onClick={handleCreateCollection}
           >
             <FolderPlus size={18} />
-            Tạo bộ sưu tập mới
+            {t('favorites_create_collection')}
           </Button>
 
           {/* Collections list */}
@@ -133,7 +135,7 @@ export const FavoritesPage = ({ onSelectItem }: FavoritesPageProps) => {
                 <div>
                   <h3 className="font-semibold text-foreground">{collection.name}</h3>
                   <p className="text-xs text-muted-foreground">
-                    {collection.items.length} món • {new Date(collection.createdAt).toLocaleDateString('vi-VN')}
+                    {collection.items.length} {t('favorites_items')} • {new Date(collection.createdAt).toLocaleDateString('vi-VN')}
                   </p>
                 </div>
                 <div className="flex gap-1">
@@ -170,7 +172,7 @@ export const FavoritesPage = ({ onSelectItem }: FavoritesPageProps) => {
                 <div className="flex items-center justify-center py-6 border border-dashed border-border rounded-xl">
                   <div className="text-center">
                     <Plus size={24} className="mx-auto text-muted-foreground/50 mb-2" />
-                    <p className="text-xs text-muted-foreground">Thêm món đồ</p>
+                    <p className="text-xs text-muted-foreground">{t('favorites_add_item')}</p>
                   </div>
                 </div>
               )}

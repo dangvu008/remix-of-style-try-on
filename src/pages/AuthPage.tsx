@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MobileNav } from '@/components/layout/MobileNav';
@@ -9,10 +10,8 @@ import { Mail, Lock, User } from 'lucide-react';
 import { toast } from 'sonner';
 import logoImage from '@/assets/logo.png';
 
-const emailSchema = z.string().email('Email không hợp lệ');
-const passwordSchema = z.string().min(6, 'Mật khẩu phải có ít nhất 6 ký tự');
-
 export const AuthPage = () => {
+  const { t } = useLanguage();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,6 +22,9 @@ export const AuthPage = () => {
   
   const { signIn, signUp, signInWithOAuth, user, loading } = useAuth();
   const navigate = useNavigate();
+
+  const emailSchema = z.string().email(t('auth_invalid_email'));
+  const passwordSchema = z.string().min(6, t('auth_password_min'));
 
   useEffect(() => {
     if (!loading && user) {
@@ -59,24 +61,24 @@ export const AuthPage = () => {
         const { error } = await signIn(email, password);
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
-            toast.error('Email hoặc mật khẩu không đúng');
+            toast.error(t('auth_wrong_credentials'));
           } else {
             toast.error(error.message);
           }
         } else {
-          toast.success('Đăng nhập thành công!');
+          toast.success(t('auth_login_success'));
           navigate('/');
         }
       } else {
         const { error } = await signUp(email, password, displayName);
         if (error) {
           if (error.message.includes('already registered')) {
-            toast.error('Email đã được đăng ký');
+            toast.error(t('auth_email_registered'));
           } else {
             toast.error(error.message);
           }
         } else {
-          toast.success('Đăng ký thành công!');
+          toast.success(t('auth_signup_success'));
           navigate('/');
         }
       }
@@ -90,7 +92,8 @@ export const AuthPage = () => {
     try {
       const { error } = await signInWithOAuth(provider);
       if (error) {
-        toast.error(`Đăng nhập bằng ${provider === 'google' ? 'Google' : 'Facebook'} thất bại`);
+        const providerName = provider === 'google' ? 'Google' : 'Facebook';
+        toast.error(t('auth_login_failed').replace('{provider}', providerName));
       }
     } finally {
       setIsOAuthLoading(null);
@@ -124,7 +127,7 @@ export const AuthPage = () => {
             TryOn
           </h1>
           <p className="text-muted-foreground text-sm mt-2">
-            {isLogin ? 'Đăng nhập để tiếp tục' : 'Tạo tài khoản mới'}
+            {isLogin ? t('auth_login_to_continue') : t('auth_create_account')}
           </p>
         </div>
 
@@ -136,7 +139,7 @@ export const AuthPage = () => {
               <Input
                 id="displayName"
                 type="text"
-                placeholder="Tên hiển thị"
+                placeholder={t('auth_display_name')}
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 className="pl-11 h-12"
@@ -150,7 +153,7 @@ export const AuthPage = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="Email"
+                placeholder={t('email')}
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
@@ -170,7 +173,7 @@ export const AuthPage = () => {
               <Input
                 id="password"
                 type="password"
-                placeholder="Mật khẩu"
+                placeholder={t('password')}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
@@ -193,14 +196,14 @@ export const AuthPage = () => {
             {isSubmitting ? (
               <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
             ) : (
-              isLogin ? 'Đăng nhập' : 'Đăng ký'
+              isLogin ? t('login') : t('signup')
             )}
           </Button>
 
           {/* Divider */}
           <div className="flex items-center gap-4 py-4">
             <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground font-medium">HOẶC</span>
+            <span className="text-xs text-muted-foreground font-medium">{t('auth_or')}</span>
             <div className="flex-1 h-px bg-border" />
           </div>
 
@@ -223,7 +226,7 @@ export const AuthPage = () => {
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
-                  Tiếp tục với Google
+                  {t('auth_continue_with_google')}
                 </>
               )}
             </Button>
@@ -241,7 +244,7 @@ export const AuthPage = () => {
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                   </svg>
-                  Tiếp tục với Facebook
+                  {t('auth_continue_with_facebook')}
                 </>
               )}
             </Button>
@@ -251,7 +254,7 @@ export const AuthPage = () => {
         {/* Toggle - Instagram style */}
         <div className="mt-8 py-4 border-t border-border w-full max-w-sm text-center">
           <p className="text-sm text-foreground">
-            {isLogin ? 'Chưa có tài khoản?' : 'Đã có tài khoản?'}
+            {isLogin ? t('auth_no_account') : t('auth_have_account')}
             <button
               type="button"
               onClick={() => {
@@ -260,7 +263,7 @@ export const AuthPage = () => {
               }}
               className="text-primary font-semibold ml-1.5 hover:opacity-80"
             >
-              {isLogin ? 'Đăng ký' : 'Đăng nhập'}
+              {isLogin ? t('signup') : t('login')}
             </button>
           </p>
         </div>
