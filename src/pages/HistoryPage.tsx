@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { History, Trash2, Share2, Download, Loader2, ImageOff, Scale, Check, X, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useCompare, SavedOutfit } from '@/contexts/CompareContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ClothingItem } from '@/types/clothing';
+import { formatDistanceToNow, Locale } from 'date-fns';
+import { vi, enUS, zhCN, ko, ja, th } from 'date-fns/locale';
 
 interface ClothingItemData {
   name: string;
@@ -28,8 +31,11 @@ interface HistoryPageProps {
   onReuseHistory?: (bodyImageUrl: string, clothingItems: ClothingItem[]) => void;
 }
 
+const localeMap: Record<string, Locale> = { vi, en: enUS, zh: zhCN, ko, ja, th };
+
 export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHistory }: HistoryPageProps) => {
   const { user, loading: authLoading } = useAuth();
+  const { t, language } = useLanguage();
   const { addToCompare, outfitsToCompare, isInCompare, clearCompare } = useCompare();
   const navigate = useNavigate();
   const [history, setHistory] = useState<TryOnHistoryItem[]>([]);
@@ -37,6 +43,8 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
+
+  const dateLocale = localeMap[language] || enUS;
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -57,10 +65,9 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast.error('Không thể tải lịch sử');
+      toast.error(t('history_cannot_load'));
       console.error(error);
     } else {
-      // Cast the data to our interface
       const typedData = (data || []).map(item => ({
         ...item,
         clothing_items: (item.clothing_items || []) as unknown as ClothingItemData[],
@@ -75,17 +82,15 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
     
     setDeletingId(item.id);
     
-    // Delete from database
     const { error } = await supabase
       .from('try_on_history')
       .delete()
       .eq('id', item.id);
 
     if (error) {
-      toast.error('Không thể xóa');
+      toast.error(t('history_cannot_delete'));
       console.error(error);
     } else {
-      // Try to delete images from storage
       try {
         const resultPath = item.result_image_url.split('/try-on-images/')[1];
         const bodyPath = item.body_image_url.split('/try-on-images/')[1];
@@ -101,7 +106,7 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
       }
       
       setHistory(prev => prev.filter(h => h.id !== item.id));
-      toast.success('Đã xóa');
+      toast.success(t('history_deleted'));
     }
     setDeletingId(null);
   };
@@ -109,9 +114,9 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
   const handleShare = async (item: TryOnHistoryItem) => {
     try {
       await navigator.clipboard.writeText(item.result_image_url);
-      toast.success('Đã sao chép link ảnh!');
+      toast.success(t('history_link_copied'));
     } catch {
-      toast.error('Không thể sao chép');
+      toast.error(t('history_cannot_copy'));
     }
   };
 
@@ -121,43 +126,34 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
     link.download = `try-on-${item.id}.png`;
     link.target = '_blank';
     link.click();
-    toast.success('Đang tải xuống...');
+    toast.success(t('history_downloading'));
   };
 
   const handleReuse = async (item: TryOnHistoryItem) => {
     if (!onReuseHistory || !onNavigateToTryOn) {
-      toast.error('Không thể sử dụng lại');
+      toast.error(t('history_cannot_reuse'));
       return;
     }
 
     try {
-      // Convert clothing items to ClothingItem format
       const clothingItems: ClothingItem[] = item.clothing_items.map((ci, idx) => ({
         id: `history-${item.id}-${idx}`,
         name: ci.name,
-        category: 'top' as const, // Default category
+        category: 'top' as const,
         imageUrl: ci.imageUrl,
       }));
 
-      // Call the reuse handler with body image URL and clothing items
       onReuseHistory(item.body_image_url, clothingItems);
       onNavigateToTryOn();
-      toast.success('Đã tải lại outfit - bạn có thể thay đổi từng món đồ');
+      toast.success(t('history_reloaded'));
     } catch (error) {
       console.error('Error reusing history:', error);
-      toast.error('Không thể tải lại outfit');
+      toast.error(t('history_cannot_reuse'));
     }
   };
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return formatDistanceToNow(new Date(dateStr), { locale: dateLocale, addSuffix: true });
   };
 
   const toggleSelectForCompare = (item: TryOnHistoryItem) => {
@@ -166,17 +162,16 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
     } else if (selectedForCompare.length < 4) {
       setSelectedForCompare(prev => [...prev, item.id]);
     } else {
-      toast.error('Chỉ có thể so sánh tối đa 4 outfit');
+      toast.error(t('history_max_compare'));
     }
   };
 
   const handleStartCompare = () => {
     if (selectedForCompare.length < 2) {
-      toast.error('Chọn ít nhất 2 outfit để so sánh');
+      toast.error(t('history_select_min'));
       return;
     }
 
-    // Clear existing compare items and add selected ones
     clearCompare();
     
     selectedForCompare.forEach(id => {
@@ -198,7 +193,7 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
       }
     });
 
-    toast.success(`Đã thêm ${selectedForCompare.length} outfit vào so sánh`);
+    toast.success(t('history_added_to_compare').replace('{count}', selectedForCompare.length.toString()));
     setCompareMode(false);
     setSelectedForCompare([]);
     
@@ -221,13 +216,13 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
             <History size={32} className="text-muted-foreground" />
           </div>
           <h2 className="font-display font-bold text-lg text-foreground mb-2">
-            Đăng nhập để xem lịch sử
+            {t('history_login_to_view')}
           </h2>
           <p className="text-muted-foreground text-sm mb-4">
-            Bạn cần đăng nhập để lưu và xem lịch sử thử đồ
+            {t('history_login_required')}
           </p>
           <Button onClick={() => navigate('/auth')} className="gradient-primary">
-            Đăng nhập
+            {t('login')}
           </Button>
         </div>
       </div>
@@ -253,12 +248,12 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
           </div>
           <div>
             <h1 className="font-display font-bold text-xl text-foreground">
-              Lịch sử thử đồ
+              {t('history_title')}
             </h1>
             <p className="text-muted-foreground text-sm">
               {compareMode 
-                ? `Đã chọn ${selectedForCompare.length}/4` 
-                : `${history.length} kết quả đã lưu`}
+                ? `${t('history_selected')} ${selectedForCompare.length}/4` 
+                : `${history.length} ${t('history_results_saved')}`}
             </p>
           </div>
         </div>
@@ -272,7 +267,7 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
             className="gap-1"
           >
             <Scale size={16} />
-            So sánh
+            {t('history_compare')}
           </Button>
         )}
       </div>
@@ -284,8 +279,8 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
             <Scale size={18} className="text-primary" />
             <span className="text-sm font-medium">
               {selectedForCompare.length < 2 
-                ? `Chọn thêm ${2 - selectedForCompare.length} outfit` 
-                : `${selectedForCompare.length} outfit đã chọn`}
+                ? t('history_select_more').replace('{count}', (2 - selectedForCompare.length).toString())
+                : t('history_outfits_selected').replace('{count}', selectedForCompare.length.toString())}
             </span>
           </div>
           <div className="flex gap-2">
@@ -295,7 +290,7 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
               onClick={cancelCompareMode}
             >
               <X size={16} />
-              Hủy
+              {t('cancel')}
             </Button>
             <Button
               variant="default"
@@ -304,7 +299,7 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
               disabled={selectedForCompare.length < 2}
             >
               <Scale size={16} />
-              So sánh
+              {t('history_compare')}
             </Button>
           </div>
         </div>
@@ -317,10 +312,10 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
             <ImageOff size={32} className="text-muted-foreground" />
           </div>
           <h3 className="font-display font-bold text-lg text-foreground mb-2">
-            Chưa có lịch sử
+            {t('history_no_history')}
           </h3>
           <p className="text-muted-foreground text-sm">
-            Thử đồ với AI và lưu kết quả để xem ở đây
+            {t('history_try_and_save')}
           </p>
         </div>
       )}
@@ -367,7 +362,7 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
                 {/* Clothing badge */}
                 {item.clothing_items && item.clothing_items.length > 0 && (
                   <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-card/90 backdrop-blur-sm text-xs font-medium text-foreground">
-                    {item.clothing_items.length} món
+                    {item.clothing_items.length} {t('history_items')}
                   </div>
                 )}
               </div>
@@ -386,7 +381,7 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
                       size="iconSm"
                       onClick={() => handleReuse(item)}
                       className="flex-1 h-8 text-primary hover:text-primary hover:bg-primary/10"
-                      title="Thử lại với outfit này"
+                      title={t('history_reuse')}
                     >
                       <RefreshCw size={14} />
                     </Button>

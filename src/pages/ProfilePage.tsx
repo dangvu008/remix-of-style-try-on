@@ -2,6 +2,7 @@ import { User, Settings, Camera, ShoppingBag, History, HelpCircle, LogOut, Chevr
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +18,7 @@ interface ProfilePageProps {
 
 export const ProfilePage = ({ onNavigateToHistory }: ProfilePageProps) => {
   const { user, signOut, loading } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [historyCount, setHistoryCount] = useState(0);
@@ -55,23 +57,23 @@ export const ProfilePage = ({ onNavigateToHistory }: ProfilePageProps) => {
   }, [user]);
 
   const menuItems = [
-    { icon: History, label: 'Lịch sử thử đồ', badge: historyCount > 0 ? historyCount.toString() : undefined },
-    { icon: ShoppingBag, label: 'Đơn hàng của tôi' },
-    { icon: Settings, label: 'Cài đặt' },
-    { icon: HelpCircle, label: 'Trợ giúp & Hỗ trợ' },
+    { icon: History, label: t('profile_try_on_history'), key: 'history', badge: historyCount > 0 ? historyCount.toString() : undefined },
+    { icon: ShoppingBag, label: t('profile_my_orders'), key: 'orders' },
+    { icon: Settings, label: t('profile_settings'), key: 'settings' },
+    { icon: HelpCircle, label: t('profile_help_support'), key: 'help' },
   ];
 
-  const handleMenuClick = (label: string) => {
-    if (label === 'Lịch sử thử đồ' && onNavigateToHistory) {
+  const handleMenuClick = (key: string) => {
+    if (key === 'history' && onNavigateToHistory) {
       onNavigateToHistory();
     } else {
-      toast.info(`Đang phát triển: ${label}`);
+      toast.info(`${t('profile_developing')} ${menuItems.find(m => m.key === key)?.label}`);
     }
   };
 
   const handleLogout = async () => {
     await signOut();
-    toast.success('Đã đăng xuất');
+    toast.success(t('profile_logged_out'));
   };
 
   const handleLogin = () => {
@@ -95,10 +97,10 @@ export const ProfilePage = ({ onNavigateToHistory }: ProfilePageProps) => {
             <User size={40} className="text-muted-foreground" />
           </div>
           <h2 className="font-display font-bold text-xl text-foreground mt-4">
-            Chưa đăng nhập
+            {t('profile_not_logged_in')}
           </h2>
           <p className="text-muted-foreground text-sm mt-2">
-            Đăng nhập để lưu lịch sử thử đồ và bộ sưu tập của bạn
+            {t('profile_login_to_save')}
           </p>
         </section>
 
@@ -107,12 +109,12 @@ export const ProfilePage = ({ onNavigateToHistory }: ProfilePageProps) => {
             onClick={handleLogin}
             className="w-full gradient-primary text-primary-foreground font-semibold py-6"
           >
-            Đăng nhập / Đăng ký
+            {t('profile_login_signup')}
           </Button>
         </section>
 
         <section className="text-center text-xs text-muted-foreground animate-slide-up" style={{ animationDelay: '0.2s' }}>
-          <p>Phiên bản 1.0.0</p>
+          <p>{t('profile_version')} 1.0.0</p>
           <p className="mt-1">© 2024 Virtual Try-On</p>
         </section>
       </div>
@@ -136,7 +138,7 @@ export const ProfilePage = ({ onNavigateToHistory }: ProfilePageProps) => {
           </button>
         </div>
         <h2 className="font-display font-bold text-xl text-foreground mt-4">
-          {profile?.display_name || user.email?.split('@')[0] || 'Người dùng'}
+          {profile?.display_name || user.email?.split('@')[0] || t('user')}
         </h2>
         <p className="text-muted-foreground text-sm">
           {user.email}
@@ -147,15 +149,15 @@ export const ProfilePage = ({ onNavigateToHistory }: ProfilePageProps) => {
       <section className="grid grid-cols-3 gap-3 animate-slide-up" style={{ animationDelay: '0.1s' }}>
         <div className="bg-card rounded-2xl p-4 text-center shadow-soft border border-border">
           <p className="font-display font-bold text-2xl text-primary">{historyCount}</p>
-          <p className="text-xs text-muted-foreground">Lần thử</p>
+          <p className="text-xs text-muted-foreground">{t('profile_tries')}</p>
         </div>
         <div className="bg-card rounded-2xl p-4 text-center shadow-soft border border-border">
           <p className="font-display font-bold text-2xl text-accent">0</p>
-          <p className="text-xs text-muted-foreground">Yêu thích</p>
+          <p className="text-xs text-muted-foreground">{t('profile_favorites')}</p>
         </div>
         <div className="bg-card rounded-2xl p-4 text-center shadow-soft border border-border">
           <p className="font-display font-bold text-2xl text-foreground">{collectionsCount}</p>
-          <p className="text-xs text-muted-foreground">Bộ sưu tập</p>
+          <p className="text-xs text-muted-foreground">{t('profile_collections')}</p>
         </div>
       </section>
 
@@ -166,7 +168,7 @@ export const ProfilePage = ({ onNavigateToHistory }: ProfilePageProps) => {
           return (
             <button
               key={index}
-              onClick={() => handleMenuClick(item.label)}
+              onClick={() => handleMenuClick(item.key)}
               className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl shadow-soft border border-border hover:border-primary/50 transition-all duration-300 group"
             >
               <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center group-hover:gradient-primary transition-all duration-300">
@@ -192,13 +194,13 @@ export const ProfilePage = ({ onNavigateToHistory }: ProfilePageProps) => {
           className="w-full text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
         >
           <LogOut size={18} />
-          Đăng xuất
+          {t('logout')}
         </Button>
       </section>
 
       {/* App info */}
       <section className="text-center text-xs text-muted-foreground animate-slide-up" style={{ animationDelay: '0.4s' }}>
-        <p>Phiên bản 1.0.0</p>
+        <p>{t('profile_version')} 1.0.0</p>
         <p className="mt-1">© 2024 Virtual Try-On</p>
       </section>
     </div>

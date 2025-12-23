@@ -60,14 +60,36 @@ const ChinaFlag = () => (
 );
 
 const KoreaFlag = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="w-5 h-5 rounded-full">
-    <clipPath id="kr-clip">
-      <circle cx="256" cy="256" r="256"/>
-    </clipPath>
-    <g clipPath="url(#kr-clip)">
-      <rect fill="#fff" width="512" height="512"/>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="w-5 h-5 rounded-full overflow-hidden">
+    <defs>
+      <clipPath id="kr-circle-clip">
+        <circle cx="256" cy="256" r="256"/>
+      </clipPath>
+    </defs>
+    <g clipPath="url(#kr-circle-clip)">
+      <rect fill="#ffffff" width="512" height="512"/>
+      {/* Taegeuk (Yin-Yang symbol) */}
       <circle fill="#c60c30" cx="256" cy="256" r="100"/>
-      <path fill="#003478" d="M256,256 a50,50 0 0,1 0,100 a50,50 0 0,0 0,-100"/>
+      <path fill="#003478" d="M256,156 a50,50 0 0,1 0,100 a50,50 0 0,0 0,100 a100,100 0 0,1 0,-200"/>
+      {/* Black trigrams - simplified */}
+      <g fill="#000000">
+        {/* Top left trigram */}
+        <rect x="70" y="100" width="70" height="12" transform="rotate(-56 105 106)"/>
+        <rect x="70" y="125" width="70" height="12" transform="rotate(-56 105 131)"/>
+        <rect x="70" y="150" width="70" height="12" transform="rotate(-56 105 156)"/>
+        {/* Bottom right trigram */}
+        <rect x="372" y="350" width="70" height="12" transform="rotate(-56 407 356)"/>
+        <rect x="372" y="375" width="70" height="12" transform="rotate(-56 407 381)"/>
+        <rect x="372" y="400" width="70" height="12" transform="rotate(-56 407 406)"/>
+        {/* Top right trigram */}
+        <rect x="372" y="100" width="70" height="12" transform="rotate(56 407 106)"/>
+        <rect x="372" y="125" width="70" height="12" transform="rotate(56 407 131)"/>
+        <rect x="372" y="150" width="70" height="12" transform="rotate(56 407 156)"/>
+        {/* Bottom left trigram */}
+        <rect x="70" y="350" width="70" height="12" transform="rotate(56 105 356)"/>
+        <rect x="70" y="375" width="70" height="12" transform="rotate(56 105 381)"/>
+        <rect x="70" y="400" width="70" height="12" transform="rotate(56 105 406)"/>
+      </g>
     </g>
   </svg>
 );
