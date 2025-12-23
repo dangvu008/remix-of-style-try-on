@@ -77,9 +77,9 @@ export const TryOnHistorySection = ({
   if (!user) {
     return (
       <section className="py-4 px-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Clock className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold">Lịch sử thử đồ</h2>
+        <div className="flex items-center gap-2 mb-2">
+          <Clock className="w-4 h-4 text-primary" />
+          <h2 className="text-sm font-semibold">Lịch sử thử đồ</h2>
         </div>
         <div className="bg-card border border-border rounded-xl p-6 text-center">
           <p className="text-muted-foreground text-sm mb-3">
@@ -93,13 +93,13 @@ export const TryOnHistorySection = ({
   if (isLoading) {
     return (
       <section className="py-4">
-        <div className="flex items-center gap-2 px-4 mb-3">
-          <Clock className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold">Lịch sử thử đồ</h2>
+        <div className="flex items-center gap-2 px-4 mb-2">
+          <Clock className="w-4 h-4 text-primary" />
+          <h2 className="text-sm font-semibold">Lịch sử thử đồ</h2>
         </div>
-        <div className="flex gap-3 px-4 overflow-x-auto scrollbar-hide">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="flex-shrink-0 w-32 h-40 rounded-xl" />
+        <div className="flex gap-2 px-4 overflow-x-auto scrollbar-hide">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="flex-shrink-0 w-20 h-28 rounded-lg" />
           ))}
         </div>
       </section>
@@ -109,12 +109,12 @@ export const TryOnHistorySection = ({
   if (history.length === 0) {
     return (
       <section className="py-4 px-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Clock className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold">Lịch sử thử đồ</h2>
+        <div className="flex items-center gap-2 mb-2">
+          <Clock className="w-4 h-4 text-primary" />
+          <h2 className="text-sm font-semibold">Lịch sử thử đồ</h2>
         </div>
-        <div className="bg-card border border-border rounded-xl p-6 text-center">
-          <Play className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+        <div className="bg-card border border-border rounded-lg p-4 text-center">
+          <Play className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
           <p className="text-muted-foreground text-sm mb-3">
             Bạn chưa thử outfit nào
           </p>
@@ -127,14 +127,14 @@ export const TryOnHistorySection = ({
   }
 
   return (
-    <section className="py-4 relative group">
-      <div className="flex items-center gap-2 px-4 mb-3">
-        <Clock className="w-5 h-5 text-primary" />
-        <h2 className="text-lg font-bold">Lịch sử thử đồ</h2>
+    <section className="py-3 relative group">
+      <div className="flex items-center gap-2 px-4 mb-2">
+        <Clock className="w-4 h-4 text-primary" />
+        <h2 className="text-sm font-semibold">Lịch sử thử đồ</h2>
         {onNavigateToHistory && (
           <button
             onClick={onNavigateToHistory}
-            className="text-xs text-primary ml-auto hover:underline"
+            className="text-[10px] text-primary ml-auto hover:underline"
           >
             Xem tất cả
           </button>
@@ -145,28 +145,28 @@ export const TryOnHistorySection = ({
       <Button
         variant="secondary"
         size="icon"
-        className="absolute left-1 top-1/2 translate-y-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity shadow-md hidden md:flex"
+        className="absolute left-1 top-1/2 translate-y-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity shadow-md hidden md:flex h-6 w-6"
         onClick={() => scroll('left')}
       >
-        <ChevronLeft className="w-4 h-4" />
+        <ChevronLeft className="w-3 h-3" />
       </Button>
       <Button
         variant="secondary"
         size="icon"
-        className="absolute right-1 top-1/2 translate-y-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity shadow-md hidden md:flex"
+        className="absolute right-1 top-1/2 translate-y-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity shadow-md hidden md:flex h-6 w-6"
         onClick={() => scroll('right')}
       >
-        <ChevronRight className="w-4 h-4" />
+        <ChevronRight className="w-3 h-3" />
       </Button>
 
       <div
         ref={scrollRef}
-        className="flex gap-3 px-4 overflow-x-auto scrollbar-hide scroll-smooth"
+        className="flex gap-2 px-4 overflow-x-auto scrollbar-hide scroll-smooth"
       >
         {history.map((item) => (
           <div
             key={item.id}
-            className="flex-shrink-0 w-32 rounded-xl overflow-hidden bg-card border border-border shadow-soft"
+            className="flex-shrink-0 w-20 rounded-lg overflow-hidden bg-card border border-border shadow-soft"
           >
             <div className="relative aspect-[3/4]">
               <img
@@ -175,8 +175,8 @@ export const TryOnHistorySection = ({
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-2">
-                <p className="text-[10px] text-muted-foreground">
+              <div className="absolute bottom-0 left-0 right-0 p-1">
+                <p className="text-[8px] text-muted-foreground">
                   {formatDistanceToNow(new Date(item.created_at), { locale: vi, addSuffix: true })}
                 </p>
               </div>

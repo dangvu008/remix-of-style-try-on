@@ -60,8 +60,8 @@ export const FeedSection = ({
   if (isLoading) {
     return (
       <div className="space-y-4 px-4">
-        <h2 className="text-lg font-bold flex items-center gap-2">
-          <Share2 className="w-5 h-5 text-primary" />
+        <h2 className="text-sm font-semibold flex items-center gap-2">
+          <Share2 className="w-4 h-4 text-primary" />
           Cộng đồng chia sẻ
         </h2>
         {[1, 2, 3].map((i) => (
@@ -92,8 +92,8 @@ export const FeedSection = ({
   if (outfits.length === 0) {
     return (
       <div className="px-4">
-        <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-          <Share2 className="w-5 h-5 text-primary" />
+        <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
+          <Share2 className="w-4 h-4 text-primary" />
           Cộng đồng chia sẻ
         </h2>
         <div className="flex flex-col items-center justify-center py-12 text-center bg-card border border-border rounded-xl">
@@ -109,8 +109,8 @@ export const FeedSection = ({
 
   return (
     <div className="px-4">
-      <h2 className="text-lg font-bold flex items-center gap-2 mb-4">
-        <Share2 className="w-5 h-5 text-primary" />
+      <h2 className="text-sm font-semibold flex items-center gap-2 mb-3">
+        <Share2 className="w-4 h-4 text-primary" />
         Cộng đồng chia sẻ
       </h2>
       <div className="space-y-4">
