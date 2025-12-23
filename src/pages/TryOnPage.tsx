@@ -23,10 +23,10 @@ import { useClothingValidation } from '@/hooks/useClothingValidation';
 import { useCategoryCorrections } from '@/hooks/useCategoryCorrections';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 // Category definitions
 const categories: { id: ClothingCategory; icon: React.ElementType; label: string }[] = [
@@ -532,19 +532,93 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
       {/* AI Processing Progress Bar */}
       <AIProgressBar progress={aiProgress} isVisible={isProcessing} onCancel={cancelProcessing} />
 
-      {/* Clothing Validation Overlay */}
+      {/* Clothing Validation Overlay - Fun Animation */}
       {isValidatingClothing && clothingProgress && (
         <div className="fixed inset-0 z-50 bg-background/90 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-card rounded-xl p-6 max-w-xs w-full shadow-medium space-y-4 border border-border">
-            <div className="flex items-center justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            {/* Lottie Animation */}
+            <div className="flex justify-center">
+              <div className="w-24 h-24 relative">
+                <DotLottieReact
+                  src="https://lottie.host/0c5e8c0a-6af5-4b32-bdbd-25d0d04f7980/W8dWzCXoD9.lottie"
+                  loop
+                  autoplay
+                  style={{ width: '100%', height: '100%' }}
+                />
+                <div className="absolute -top-1 -right-1 text-xl animate-bounce">
+                  {clothingProgress.stage === 'analyzing' ? '🔍' : 
+                   clothingProgress.stage === 'removing_background' ? '✂️' : '👗'}
+                </div>
+              </div>
             </div>
+            
+            {/* Messages */}
             <div className="text-center space-y-2">
-              <p className="font-medium text-foreground">{t('msg_analyzing_clothing')}</p>
-              <p className="text-sm text-muted-foreground">{getClothingProgressMessage()}</p>
+              <p className="font-semibold text-foreground text-lg">
+                {clothingProgress.stage === 'analyzing' ? '🧠 AI đang ngắm nghía...' :
+                 clothingProgress.stage === 'removing_background' ? '✨ Đang tách nền xinh xắn...' :
+                 clothingProgress.stage === 'checking_size' ? '📏 Đang đo đạc...' :
+                 '👗 Đang xử lý quần áo...'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {clothingProgress.stage === 'analyzing' ? 'Hmm, món đồ này đẹp thế!' :
+                 clothingProgress.stage === 'removing_background' ? 'Cắt cho gọn gàng nào!' :
+                 clothingProgress.stage === 'checking_size' ? 'Kiểm tra kích thước...' :
+                 'Sắp xong rồi đó!'}
+              </p>
             </div>
-            <Progress value={clothingProgress.progress} className="h-2" />
+            
+            {/* Fun Progress Bar */}
+            <div className="space-y-2">
+              <div className="relative h-4 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500 ease-out relative overflow-hidden"
+                  style={{
+                    width: `${clothingProgress.progress}%`,
+                    background: 'linear-gradient(90deg, #ec4899, #8b5cf6, #3b82f6)',
+                  }}
+                >
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+                      animation: 'shimmer 1.5s infinite',
+                    }}
+                  />
+                </div>
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 text-sm transition-all duration-500"
+                  style={{ left: `calc(${Math.max(8, clothingProgress.progress)}% - 10px)` }}
+                >
+                  {clothingProgress.progress < 100 ? '👕' : '🎉'}
+                </div>
+              </div>
+              <p className="text-xs text-center text-muted-foreground font-medium">
+                {clothingProgress.progress}%
+              </p>
+            </div>
+            
+            {/* Animated dots */}
+            <div className="flex justify-center gap-1.5 pt-2">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="w-2 h-2 rounded-full bg-primary"
+                  style={{
+                    animation: 'bounce 1s infinite',
+                    animationDelay: `${i * 0.15}s`,
+                  }}
+                />
+              ))}
+            </div>
           </div>
+          
+          <style>{`
+            @keyframes shimmer {
+              0% { transform: translateX(-100%); }
+              100% { transform: translateX(100%); }
+            }
+          `}</style>
         </div>
       )}
 

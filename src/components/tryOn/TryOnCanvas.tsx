@@ -31,7 +31,7 @@ export const TryOnCanvas = ({
       const base64Url = event.target?.result as string;
       
       const result = await validateAndProcessImage(base64Url, { 
-        removeBackground: true,
+        removeBackground: false, // Body image should NOT have background removed
         language 
       });
       

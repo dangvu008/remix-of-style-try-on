@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { ClothingItem } from '@/types/clothing';
 import { formatDistanceToNow, Locale } from 'date-fns';
 import { vi, enUS, zhCN, ko, ja, th } from 'date-fns/locale';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 interface ClothingItemData {
   name: string;
@@ -232,8 +233,16 @@ export const HistoryPage = ({ onNavigateToCompare, onNavigateToTryOn, onReuseHis
   // Loading state
   if (loading || authLoading) {
     return (
-      <div className="pb-24 pt-16 px-4 max-w-md mx-auto flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="pb-24 pt-16 px-4 max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <div className="w-24 h-24">
+          <DotLottieReact
+            src="https://lottie.host/0c5e8c0a-6af5-4b32-bdbd-25d0d04f7980/W8dWzCXoD9.lottie"
+            loop
+            autoplay
+            style={{ width: '100%', height: '100%' }}
+          />
+        </div>
+        <p className="text-sm text-muted-foreground animate-pulse">📚 Đang tải lịch sử...</p>
       </div>
     );
   }

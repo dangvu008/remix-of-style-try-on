@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import logoImage from '@/assets/logo.png';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 interface ClothingItemData {
   id?: string;
@@ -126,8 +127,16 @@ export const SharedOutfitDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
+        <div className="w-24 h-24">
+          <DotLottieReact
+            src="https://lottie.host/d10e8b97-a4d3-4f9e-b0f8-7e9cdef05ec8/5EF3wJWe17.lottie"
+            loop
+            autoplay
+            style={{ width: '100%', height: '100%' }}
+          />
+        </div>
+        <p className="text-sm text-muted-foreground animate-pulse">✨ Đang tải outfit...</p>
       </div>
     );
   }
