@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { 
   Shirt, Plus, Trash2, Share2, FolderPlus, Edit2, 
-  Loader2, ImageOff, ChevronRight, MoreVertical
+  ImageOff, ChevronRight, MoreVertical, Heart, Clock,
+  Sparkles, Eye, EyeOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,9 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
+import { vi } from 'date-fns/locale';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +40,7 @@ interface TryOnHistoryItem {
   result_image_url: string;
   clothing_items: ClothingItemData[];
   created_at: string;
+  is_favorite?: boolean;
 }
 
 interface UserCollection {
@@ -60,6 +65,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
   const [history, setHistory] = useState<TryOnHistoryItem[]>([]);
   const [collections, setCollections] = useState<UserCollection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   
   // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -105,6 +111,12 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
         clothing_items: (item.clothing_items || []) as unknown as ClothingItemData[],
       }));
       setHistory(typedData);
+      
+      // Set favorite IDs
+      const favIds = new Set(
+        typedData.filter(item => item.is_favorite).map(item => item.id)
+      );
+      setFavoriteIds(favIds);
     }
 
     if (collectionsResult.error) {
@@ -267,11 +279,51 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
   };
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
+    return formatDistanceToNow(new Date(dateStr), { locale: vi, addSuffix: true });
+  };
+
+  const toggleFavorite = async (outfitId: string) => {
+    if (!user) return;
+    
+    const isFavorite = favoriteIds.has(outfitId);
+    
+    try {
+      if (isFavorite) {
+        await supabase
+          .from('try_on_history')
+          .update({ is_favorite: false })
+          .eq('id', outfitId);
+        setFavoriteIds(prev => {
+          const next = new Set(prev);
+          next.delete(outfitId);
+          return next;
+        });
+      } else {
+        await supabase
+          .from('try_on_history')
+          .update({ is_favorite: true })
+          .eq('id', outfitId);
+        setFavoriteIds(prev => new Set([...prev, outfitId]));
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  };
+
+  const handleDeleteOutfit = async (outfitId: string) => {
+    if (!user) return;
+    
+    const { error } = await supabase
+      .from('try_on_history')
+      .delete()
+      .eq('id', outfitId);
+    
+    if (error) {
+      toast.error('Không thể xóa outfit');
+    } else {
+      setHistory(prev => prev.filter(h => h.id !== outfitId));
+      toast.success('Đã xóa outfit');
+    }
   };
 
   // Not logged in
@@ -314,41 +366,58 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
   }
 
   return (
-    <div className="pb-24 pt-16 px-4 max-w-md mx-auto space-y-6">
-      {/* Header */}
-      <section className="text-center animate-slide-up">
-        <div className="w-16 h-16 rounded-2xl gradient-primary mx-auto flex items-center justify-center mb-4 shadow-glow">
-          <Shirt size={32} className="text-primary-foreground" />
+    <div className="pb-24 pt-16 px-4 max-w-md mx-auto space-y-4">
+      {/* Stats Bar */}
+      <div className="flex items-center justify-between bg-card rounded-xl p-3 border border-border">
+        <div className="flex items-center gap-4">
+          <div className="text-center">
+            <p className="text-lg font-bold text-foreground">{history.length}</p>
+            <p className="text-xs text-muted-foreground">Outfit</p>
+          </div>
+          <div className="w-px h-8 bg-border" />
+          <div className="text-center">
+            <p className="text-lg font-bold text-foreground">{collections.length}</p>
+            <p className="text-xs text-muted-foreground">Bộ sưu tập</p>
+          </div>
+          <div className="w-px h-8 bg-border" />
+          <div className="text-center">
+            <p className="text-lg font-bold text-foreground">{favoriteIds.size}</p>
+            <p className="text-xs text-muted-foreground">Yêu thích</p>
+          </div>
         </div>
-        <h1 className="font-display font-bold text-2xl text-foreground mb-2">
-          {t('wardrobe_title')}
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          {history.length} {t('wardrobe_outfit')} • {collections.length} {t('wardrobe_collections')}
-        </p>
-      </section>
+        {onNavigateToTryOn && (
+          <Button size="sm" onClick={onNavigateToTryOn} className="gradient-primary">
+            <Plus size={16} />
+            Thử đồ
+          </Button>
+        )}
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-2 p-1 bg-muted rounded-xl">
         <button
           onClick={() => setActiveTab('outfits')}
-          className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-300 ${
+          className={cn(
+            "flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2",
             activeTab === 'outfits'
               ? 'bg-card text-foreground shadow-soft'
               : 'text-muted-foreground hover:text-foreground'
-          }`}
+          )}
         >
-          {t('wardrobe_saved_outfits')} ({history.length})
+          <Shirt size={16} />
+          Outfit ({history.length})
         </button>
         <button
           onClick={() => setActiveTab('collections')}
-          className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-300 ${
+          className={cn(
+            "flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2",
             activeTab === 'collections'
               ? 'bg-card text-foreground shadow-soft'
               : 'text-muted-foreground hover:text-foreground'
-          }`}
+          )}
         >
-          {t('wardrobe_collections')} ({collections.length})
+          <FolderPlus size={16} />
+          Bộ sưu tập ({collections.length})
         </button>
       </div>
 
@@ -368,6 +437,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
               </p>
               {onNavigateToTryOn && (
                 <Button onClick={onNavigateToTryOn} className="gradient-primary">
+                  <Sparkles size={18} />
                   {t('wardrobe_try_now')}
                 </Button>
               )}
@@ -377,40 +447,89 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
               {history.map((item, index) => (
                 <div
                   key={item.id}
-                  className="bg-card rounded-2xl overflow-hidden shadow-soft border border-border animate-slide-up group"
+                  className="bg-card rounded-2xl overflow-hidden shadow-soft border border-border animate-slide-up group relative"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
                   <div className="relative aspect-[3/4] bg-secondary">
                     <img
                       src={item.result_image_url}
                       alt="Outfit"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
                       loading="lazy"
                     />
                     
-                    {/* Clothing count badge */}
-                    {item.clothing_items?.length > 0 && (
-                      <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-card/90 backdrop-blur-sm text-xs font-medium text-foreground">
-                        {item.clothing_items.length} {t('history_items')}
-                      </div>
-                    )}
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    
+                    {/* Top actions */}
+                    <div className="absolute top-2 left-2 right-2 flex justify-between items-start">
+                      {/* Clothing count badge */}
+                      {item.clothing_items?.length > 0 && (
+                        <div className="px-2 py-1 rounded-full bg-card/90 backdrop-blur-sm text-xs font-medium text-foreground">
+                          {item.clothing_items.length} món
+                        </div>
+                      )}
+                      
+                      {/* Favorite button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(item.id);
+                        }}
+                        className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center transition-all",
+                          favoriteIds.has(item.id) 
+                            ? "bg-red-500 text-white" 
+                            : "bg-card/90 backdrop-blur-sm text-foreground opacity-0 group-hover:opacity-100"
+                        )}
+                      >
+                        <Heart size={14} className={cn(favoriteIds.has(item.id) && "fill-current")} />
+                      </button>
+                    </div>
 
-                    {/* Add to collection button */}
-                    <button
-                      onClick={() => {
-                        setSelectedOutfit(item);
-                        setIsAddToCollectionOpen(true);
-                      }}
-                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Plus size={16} className="text-foreground" />
-                    </button>
+                    {/* Bottom actions - visible on hover */}
+                    <div className="absolute bottom-2 left-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => {
+                          setSelectedOutfit(item);
+                          setIsAddToCollectionOpen(true);
+                        }}
+                        className="flex-1 py-1.5 rounded-lg bg-card/90 backdrop-blur-sm text-xs font-medium text-foreground flex items-center justify-center gap-1"
+                      >
+                        <FolderPlus size={12} />
+                        Thêm vào
+                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="w-8 h-8 rounded-lg bg-card/90 backdrop-blur-sm flex items-center justify-center">
+                            <MoreVertical size={14} className="text-foreground" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => {
+                            navigator.clipboard.writeText(item.result_image_url);
+                            toast.success('Đã sao chép link ảnh');
+                          }}>
+                            <Share2 size={14} className="mr-2" />
+                            Chia sẻ
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-destructive"
+                            onClick={() => handleDeleteOutfit(item.id)}
+                          >
+                            <Trash2 size={14} className="mr-2" />
+                            Xóa
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
 
                   <div className="p-3">
-                    <p className="text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Clock size={12} />
                       {formatDate(item.created_at)}
-                    </p>
+                    </div>
                     {item.clothing_items?.length > 0 && (
                       <p className="text-xs text-foreground mt-1 truncate">
                         {item.clothing_items.map(c => c.name).join(', ')}

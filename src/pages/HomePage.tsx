@@ -15,9 +15,16 @@ interface HomePageProps {
   onNavigateToCompare?: () => void;
   onNavigateToHistory?: () => void;
   onSelectItem: (item: ClothingItem) => void;
+  onViewHistoryResult?: (item: {
+    id: string;
+    result_image_url: string;
+    body_image_url: string;
+    created_at: string;
+    clothing_items: Array<{ name: string; imageUrl: string }>;
+  }) => void;
 }
 
-export const HomePage = ({ onNavigateToTryOn, onNavigateToHistory, onSelectItem }: HomePageProps) => {
+export const HomePage = ({ onNavigateToTryOn, onNavigateToHistory, onSelectItem, onViewHistoryResult }: HomePageProps) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { outfits, isLoading, isLoadingMore, hasMore, loadMore, refresh, hideOutfit, saveOutfit, unsaveOutfit } = useOutfitFeed();
@@ -92,6 +99,7 @@ export const HomePage = ({ onNavigateToTryOn, onNavigateToHistory, onSelectItem 
         <TryOnHistorySection
           onNavigateToTryOn={onNavigateToTryOn}
           onNavigateToHistory={onNavigateToHistory}
+          onViewResult={onViewHistoryResult}
         />
 
         {/* Suggested Clothing Section */}

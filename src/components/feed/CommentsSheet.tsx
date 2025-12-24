@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { vi, enUS, zhCN, ko, ja, th } from 'date-fns/locale';
 
 interface Comment {
   id: string;
@@ -31,10 +32,23 @@ interface CommentsSheetProps {
 
 export const CommentsSheet = ({ outfitId, isOpen, onClose, onCommentAdded }: CommentsSheetProps) => {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get locale for date formatting
+  const getLocale = () => {
+    switch (language) {
+      case 'vi': return vi;
+      case 'zh': return zhCN;
+      case 'ko': return ko;
+      case 'ja': return ja;
+      case 'th': return th;
+      default: return enUS;
+    }
+  };
 
   useEffect(() => {
     if (isOpen && outfitId) {
@@ -74,7 +88,7 @@ export const CommentsSheet = ({ outfitId, isOpen, onClose, onCommentAdded }: Com
       }
     } catch (error) {
       console.error('Error fetching comments:', error);
-      toast.error('Không thể tải bình luận');
+      toast.error(t('comments_cannot_load'));
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +98,7 @@ export const CommentsSheet = ({ outfitId, isOpen, onClose, onCommentAdded }: Com
     e.preventDefault();
     
     if (!user) {
-      toast.error('Vui lòng đăng nhập để bình luận');
+      toast.error(t('comments_login_required'));
       return;
     }
     
@@ -118,10 +132,10 @@ export const CommentsSheet = ({ outfitId, isOpen, onClose, onCommentAdded }: Com
       
       setNewComment('');
       onCommentAdded?.();
-      toast.success('Đã thêm bình luận');
+      toast.success(t('comments_added'));
     } catch (error) {
       console.error('Error adding comment:', error);
-      toast.error('Không thể thêm bình luận');
+      toast.error(t('comments_cannot_add'));
     } finally {
       setIsSubmitting(false);
     }
@@ -138,10 +152,10 @@ export const CommentsSheet = ({ outfitId, isOpen, onClose, onCommentAdded }: Com
 
       setComments(prev => prev.filter(c => c.id !== commentId));
       onCommentAdded?.();
-      toast.success('Đã xóa bình luận');
+      toast.success(t('comments_deleted'));
     } catch (error) {
       console.error('Error deleting comment:', error);
-      toast.error('Không thể xóa bình luận');
+      toast.error(t('comments_cannot_delete'));
     }
   };
 
@@ -149,7 +163,7 @@ export const CommentsSheet = ({ outfitId, isOpen, onClose, onCommentAdded }: Com
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="bottom" className="h-[70vh] rounded-t-2xl">
         <SheetHeader className="text-center border-b border-border pb-3">
-          <SheetTitle>Bình luận</SheetTitle>
+          <SheetTitle>{t('comments_title')}</SheetTitle>
         </SheetHeader>
 
         <ScrollArea className="flex-1 h-[calc(100%-120px)] py-4">
@@ -159,8 +173,8 @@ export const CommentsSheet = ({ outfitId, isOpen, onClose, onCommentAdded }: Com
             </div>
           ) : comments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-muted-foreground">Chưa có bình luận nào</p>
-              <p className="text-sm text-muted-foreground">Hãy là người đầu tiên bình luận!</p>
+              <p className="text-muted-foreground">{t('comments_no_comments')}</p>
+              <p className="text-sm text-muted-foreground">{t('comments_be_first')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -176,7 +190,7 @@ export const CommentsSheet = ({ outfitId, isOpen, onClose, onCommentAdded }: Com
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <span className="text-sm font-semibold">
-                          {comment.user_profile?.display_name || 'Người dùng'}
+                          {comment.user_profile?.display_name || t('user')}
                         </span>
                         <span className="text-sm ml-2">{comment.content}</span>
                       </div>
@@ -192,7 +206,7 @@ export const CommentsSheet = ({ outfitId, isOpen, onClose, onCommentAdded }: Com
                     <p className="text-[10px] text-muted-foreground mt-0.5">
                       {formatDistanceToNow(new Date(comment.created_at), { 
                         addSuffix: true, 
-                        locale: vi 
+                        locale: getLocale() 
                       })}
                     </p>
                   </div>
@@ -213,7 +227,7 @@ export const CommentsSheet = ({ outfitId, isOpen, onClose, onCommentAdded }: Com
               </Avatar>
             )}
             <Input
-              placeholder={user ? "Thêm bình luận..." : "Đăng nhập để bình luận"}
+              placeholder={user ? t('comments_add_placeholder') : t('comments_login_to_comment')}
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               disabled={!user || isSubmitting}

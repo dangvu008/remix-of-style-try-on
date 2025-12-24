@@ -24,11 +24,17 @@ const MainApp = () => {
   const [selectedItem, setSelectedItem] = useState<ClothingItem | undefined>();
   const [reuseBodyImage, setReuseBodyImage] = useState<string | undefined>();
   const [reuseClothingItems, setReuseClothingItems] = useState<ClothingItem[]>([]);
+  const [historyResult, setHistoryResult] = useState<{
+    resultImageUrl: string;
+    bodyImageUrl: string;
+    clothingItems: Array<{ name: string; imageUrl: string }>;
+  } | undefined>();
 
   const handleSelectItem = (item: ClothingItem) => {
     setSelectedItem(item);
     setReuseBodyImage(undefined);
     setReuseClothingItems([]);
+    setHistoryResult(undefined);
     setActiveTab('tryOn');
     toast.success(`Đã chọn ${item.name} để thử`);
   };
@@ -37,6 +43,25 @@ const MainApp = () => {
     setReuseBodyImage(bodyImageUrl);
     setReuseClothingItems(clothingItems);
     setSelectedItem(undefined);
+    setHistoryResult(undefined);
+  };
+
+  const handleViewHistoryResult = (item: {
+    id: string;
+    result_image_url: string;
+    body_image_url: string;
+    created_at: string;
+    clothing_items: Array<{ name: string; imageUrl: string }>;
+  }) => {
+    setHistoryResult({
+      resultImageUrl: item.result_image_url,
+      bodyImageUrl: item.body_image_url,
+      clothingItems: item.clothing_items,
+    });
+    setSelectedItem(undefined);
+    setReuseBodyImage(undefined);
+    setReuseClothingItems([]);
+    setActiveTab('tryOn');
   };
 
   const renderPage = () => {
@@ -48,6 +73,7 @@ const MainApp = () => {
             onNavigateToCompare={() => setActiveTab('compare')}
             onNavigateToHistory={() => setActiveTab('history')}
             onSelectItem={handleSelectItem}
+            onViewHistoryResult={handleViewHistoryResult}
           />
         );
       case 'tryOn':
@@ -56,6 +82,7 @@ const MainApp = () => {
             initialItem={selectedItem} 
             reuseBodyImage={reuseBodyImage}
             reuseClothingItems={reuseClothingItems}
+            historyResult={historyResult}
           />
         );
       case 'compare':
@@ -85,6 +112,7 @@ const MainApp = () => {
             onNavigateToCompare={() => setActiveTab('compare')}
             onNavigateToHistory={() => setActiveTab('history')}
             onSelectItem={handleSelectItem}
+            onViewHistoryResult={handleViewHistoryResult}
           />
         );
     }

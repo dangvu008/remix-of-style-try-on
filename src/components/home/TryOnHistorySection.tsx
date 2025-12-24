@@ -11,6 +11,7 @@ import { vi, enUS, zhCN, ko, ja, th } from 'date-fns/locale';
 interface TryOnHistoryItem {
   id: string;
   result_image_url: string;
+  body_image_url: string;
   created_at: string;
   clothing_items: Array<{ name: string; imageUrl: string }>;
 }
@@ -18,6 +19,7 @@ interface TryOnHistoryItem {
 interface TryOnHistorySectionProps {
   onNavigateToTryOn: () => void;
   onNavigateToHistory?: () => void;
+  onViewResult?: (item: TryOnHistoryItem) => void;
 }
 
 const localeMap = {
@@ -32,6 +34,7 @@ const localeMap = {
 export const TryOnHistorySection = ({
   onNavigateToTryOn,
   onNavigateToHistory,
+  onViewResult,
 }: TryOnHistorySectionProps) => {
   const { user } = useAuth();
   const { t, language } = useLanguage();
@@ -50,7 +53,7 @@ export const TryOnHistorySection = ({
       try {
         const { data, error } = await supabase
           .from('try_on_history')
-          .select('id, result_image_url, created_at, clothing_items')
+          .select('id, result_image_url, body_image_url, created_at, clothing_items')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(10);
@@ -61,6 +64,7 @@ export const TryOnHistorySection = ({
           (data || []).map((item) => ({
             id: item.id,
             result_image_url: item.result_image_url,
+            body_image_url: item.body_image_url,
             created_at: item.created_at,
             clothing_items: (item.clothing_items as unknown as Array<{ name: string; imageUrl: string }>) || [],
           }))
@@ -179,7 +183,8 @@ export const TryOnHistorySection = ({
         {history.map((item) => (
           <div
             key={item.id}
-            className="flex-shrink-0 w-20 rounded-lg overflow-hidden bg-card border border-border shadow-soft"
+            className="flex-shrink-0 w-20 rounded-lg overflow-hidden bg-card border border-border shadow-soft cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => onViewResult?.(item)}
           >
             <div className="relative aspect-[3/4]">
               <img

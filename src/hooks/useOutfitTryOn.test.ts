@@ -57,13 +57,20 @@ describe('extractClothingItemsForTryOn', () => {
    * **Feature: outfit-try-on-from-feed, Property 1: All outfit items passed to try-on processor**
    * **Validates: Requirements 1.3**
    */
-  it('should return exactly N items for an outfit with N clothing items', () => {
+  it('should return exactly N items for an outfit with N clothing items, or 1 fallback item when empty', () => {
     fc.assert(
       fc.property(sharedOutfitArb, (outfit) => {
         const result = extractClothingItemsForTryOn(outfit);
         
-        // Property: The number of items returned equals the number of items in the outfit
-        expect(result.length).toBe(outfit.clothing_items.length);
+        // Property: When outfit has clothing items, return them all
+        // When outfit has no clothing items, return 1 fallback item (the outfit image)
+        if (outfit.clothing_items && outfit.clothing_items.length > 0) {
+          expect(result.length).toBe(outfit.clothing_items.length);
+        } else {
+          // Fallback: returns outfit image as single item
+          expect(result.length).toBe(1);
+          expect(result[0].imageUrl).toBe(outfit.result_image_url);
+        }
       }),
       { numRuns: 100 }
     );
@@ -130,7 +137,10 @@ describe('extractClothingItemsForTryOn', () => {
       clothing_items: undefined as unknown as ClothingItemInfo[],
     } as SharedOutfit;
 
-    expect(extractClothingItemsForTryOn(outfitWithUndefined)).toEqual([]);
+    // Should return outfit image as fallback when no clothing items
+    expect(extractClothingItemsForTryOn(outfitWithUndefined)).toEqual([
+      { imageUrl: 'https://example.com/image.jpg', name: 'Test' }
+    ]);
 
     // Test with non-array clothing_items
     const outfitWithNonArray = {
@@ -138,6 +148,9 @@ describe('extractClothingItemsForTryOn', () => {
       clothing_items: 'not-an-array' as unknown as ClothingItemInfo[],
     } as SharedOutfit;
 
-    expect(extractClothingItemsForTryOn(outfitWithNonArray)).toEqual([]);
+    // Should return outfit image as fallback when clothing_items is not an array
+    expect(extractClothingItemsForTryOn(outfitWithNonArray)).toEqual([
+      { imageUrl: 'https://example.com/image.jpg', name: 'Test' }
+    ]);
   });
 });

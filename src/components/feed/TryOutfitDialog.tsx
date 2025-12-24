@@ -16,6 +16,7 @@ import { useOutfitTryOn, SharedOutfit, ClothingItemInfo } from '@/hooks/useOutfi
 import { useTryOnHistory } from '@/hooks/useTryOnHistory';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOutfitAnalysis } from '@/hooks/useOutfitAnalysis';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TryOutfitDialogProps {
   open: boolean;
@@ -59,6 +60,7 @@ export const TryOutfitDialog = ({
   const { saveTryOnResult } = useTryOnHistory();
   const { user } = useAuth();
   const { analyzeOutfit, isAnalyzing, analyzedItems } = useOutfitAnalysis();
+  const { t } = useLanguage();
 
   const [step, setStep] = useState<DialogStep>('select-body');
   const [isSaving, setIsSaving] = useState(false);
@@ -206,9 +208,9 @@ export const TryOutfitDialog = ({
           <DialogHeader className="p-4 pb-0">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-lg font-semibold">
-                {step === 'select-body' && 'Mặc thử outfit'}
-                {step === 'processing' && 'Đang xử lý...'}
-                {step === 'result' && 'Kết quả thử đồ'}
+                {step === 'select-body' && t('feed_try_outfit')}
+                {step === 'processing' && t('feed_processing')}
+                {step === 'result' && t('feed_result')}
               </DialogTitle>
               <Button
                 variant="ghost"
@@ -228,7 +230,7 @@ export const TryOutfitDialog = ({
                 {/* Outfit preview */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Outfit sẽ mặc thử
+                    {t('feed_outfit_to_try')}
                   </h3>
                   <div className="flex gap-3">
                     <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
@@ -241,7 +243,7 @@ export const TryOutfitDialog = ({
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{outfit.title}</p>
                       <p className="text-sm text-muted-foreground">
-                        {outfit.clothing_items?.length || 0} món đồ
+                        {t('feed_items_count').replace('{count}', String(outfit.clothing_items?.length || 0))}
                       </p>
                     </div>
                   </div>
@@ -250,13 +252,13 @@ export const TryOutfitDialog = ({
                 {/* Clothing items preview - using AI-analyzed items */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Các món đồ trong outfit
+                    {t('feed_items_in_outfit')}
                   </h3>
                   {isAnalyzing ? (
                     <div className="flex items-center gap-2 p-4 bg-muted/50 rounded-lg">
                       <Loader2 className="w-4 h-4 animate-spin text-primary" />
                       <span className="text-sm text-muted-foreground">
-                        Đang phân tích outfit...
+                        {t('feed_analyzing_outfit')}
                       </span>
                     </div>
                   ) : displayItems.length > 0 ? (
@@ -266,7 +268,7 @@ export const TryOutfitDialog = ({
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg">
-                      Không tìm thấy món đồ nào
+                      {t('feed_no_items_found')}
                     </p>
                   )}
                 </div>
@@ -274,7 +276,7 @@ export const TryOutfitDialog = ({
                 {/* Body image selector */}
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Chọn ảnh toàn thân của bạn
+                    {t('feed_select_body_photo')}
                   </h3>
                   <div className="aspect-[3/4] bg-muted rounded-xl overflow-hidden">
                     <TryOnCanvas
@@ -298,7 +300,7 @@ export const TryOutfitDialog = ({
                   disabled={!bodyImage}
                   onClick={handleStartTryOn}
                 >
-                  Bắt đầu mặc thử
+                  {t('feed_start_try_on')}
                 </Button>
               </>
             )}
@@ -312,7 +314,7 @@ export const TryOutfitDialog = ({
                 <div className="aspect-[3/4] bg-muted rounded-xl overflow-hidden">
                   <img
                     src={result.resultImageUrl}
-                    alt="Kết quả thử đồ"
+                    alt={t('feed_try_on_result')}
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -325,7 +327,7 @@ export const TryOutfitDialog = ({
                     onClick={handleRetry}
                   >
                     <RefreshCw size={16} />
-                    Thử lại
+                    {t('retry')}
                   </Button>
                   <Button
                     variant="outline"
@@ -333,7 +335,7 @@ export const TryOutfitDialog = ({
                     onClick={handleDownload}
                   >
                     <Download size={16} />
-                    Tải về
+                    {t('download')}
                   </Button>
                   <Button
                     variant={isSaved ? "secondary" : "default"}
@@ -344,12 +346,12 @@ export const TryOutfitDialog = ({
                     {isSaved ? (
                       <>
                         <Check size={16} />
-                        Đã lưu
+                        {t('feed_saved')}
                       </>
                     ) : (
                       <>
                         <Bookmark size={16} />
-                        {isSaving ? 'Đang lưu...' : 'Lưu'}
+                        {isSaving ? t('feed_saving') : t('save')}
                       </>
                     )}
                   </Button>
@@ -360,7 +362,7 @@ export const TryOutfitDialog = ({
                     onClick={handleShare}
                   >
                     <Share2 size={16} />
-                    Chia sẻ
+                    {t('share')}
                   </Button>
                 </div>
 
@@ -374,7 +376,7 @@ export const TryOutfitDialog = ({
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground">Outfit gốc</p>
+                    <p className="text-xs text-muted-foreground">{t('feed_original_outfit')}</p>
                     <p className="text-sm font-medium truncate">{outfit.title}</p>
                   </div>
                 </div>
@@ -416,11 +418,11 @@ export const TryOutfitDialog = ({
           setShowLoginDialog(false);
           setPendingAction(null);
         }}
-        title={pendingAction === 'save' ? 'Đăng nhập để lưu' : 'Đăng nhập để chia sẻ'}
+        title={pendingAction === 'save' ? t('login_to_save') : t('login_to_share')}
         description={
           pendingAction === 'save'
-            ? 'Bạn cần đăng nhập để lưu kết quả thử đồ vào lịch sử của mình.'
-            : 'Bạn cần đăng nhập để chia sẻ outfit lên cộng đồng.'
+            ? t('login_to_save_desc')
+            : t('login_to_share_desc')
         }
       />
     </>

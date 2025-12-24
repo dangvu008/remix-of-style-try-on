@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ClothingItem } from '@/types/clothing';
 import { ClothingItemInfo } from '@/hooks/useOutfitTryOn';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SimilarItemsSheetProps {
   open: boolean;
@@ -35,6 +36,7 @@ export const SimilarItemsSheet = ({
   onSelectItem,
   isSearching = false,
 }: SimilarItemsSheetProps) => {
+  const { t } = useLanguage();
   const hasItems = similarItems.length > 0;
 
   return (
@@ -43,11 +45,11 @@ export const SimilarItemsSheet = ({
         <SheetHeader className="text-left">
           <SheetTitle className="flex items-center gap-2">
             <Search size={20} />
-            Đồ tương tự trong tủ đồ
+            {t('clothing_similar_in_wardrobe')}
           </SheetTitle>
           {sourceItem && (
             <SheetDescription>
-              Tìm kiếm đồ giống với "{sourceItem.name}"
+              {t('clothing_searching_for').replace('{name}', sourceItem.name)}
             </SheetDescription>
           )}
         </SheetHeader>
@@ -62,7 +64,7 @@ export const SimilarItemsSheet = ({
             /* Loading State */
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mb-4" />
-              <p className="text-sm">Đang tìm kiếm...</p>
+              <p className="text-sm">{t('clothing_searching')}</p>
             </div>
           ) : hasItems ? (
             /* Results Grid (Requirement 3.3) */
@@ -108,17 +110,17 @@ export const SimilarItemsSheet = ({
                 <Search size={24} className="text-muted-foreground" />
               </div>
               <h4 className="font-medium text-foreground mb-2">
-                Không tìm thấy đồ tương tự
+                {t('clothing_no_similar_found')}
               </h4>
               <p className="text-sm text-muted-foreground max-w-xs">
-                Bạn chưa có món đồ nào trong danh mục này. Hãy thêm đồ vào tủ đồ để dễ dàng tìm kiếm sau này!
+                {t('clothing_no_similar_desc')}
               </p>
               <Button
                 variant="outline"
                 className="mt-4"
                 onClick={() => onOpenChange(false)}
               >
-                Đóng
+                {t('close')}
               </Button>
             </div>
           )}

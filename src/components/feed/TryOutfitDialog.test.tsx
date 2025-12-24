@@ -29,6 +29,40 @@ vi.mock('@/contexts/AuthContext', () => ({
   })),
 }));
 
+// Mock translations - return Vietnamese text for testing
+vi.mock('@/contexts/LanguageContext', () => ({
+  useLanguage: vi.fn(() => ({
+    t: (key: string) => {
+      const translations: Record<string, string> = {
+        'feed_try_outfit': 'Mặc thử outfit',
+        'feed_processing': 'Đang xử lý...',
+        'feed_result': 'Kết quả thử đồ',
+        'feed_outfit_to_try': 'Outfit sẽ mặc thử',
+        'feed_items_count': '{count} món đồ',
+        'feed_items_in_outfit': 'Các món đồ trong outfit',
+        'feed_analyzing_outfit': 'Đang phân tích outfit...',
+        'feed_no_items_found': 'Không tìm thấy món đồ nào',
+        'feed_select_body_photo': 'Chọn ảnh toàn thân của bạn',
+        'feed_start_try_on': 'Bắt đầu mặc thử',
+        'feed_try_on_result': 'Kết quả thử đồ',
+        'feed_original_outfit': 'Outfit gốc',
+        'feed_saved': 'Đã lưu',
+        'feed_saving': 'Đang lưu...',
+        'retry': 'Thử lại',
+        'download': 'Tải về',
+        'save': 'Lưu',
+        'share': 'Chia sẻ',
+        'login_to_save': 'Đăng nhập để lưu',
+        'login_to_share': 'Đăng nhập để chia sẻ',
+        'login_to_save_desc': 'Bạn cần đăng nhập để lưu kết quả thử đồ vào lịch sử của mình.',
+        'login_to_share_desc': 'Bạn cần đăng nhập để chia sẻ outfit lên cộng đồng.',
+      };
+      return translations[key] || key;
+    },
+    language: 'vi',
+  })),
+}));
+
 vi.mock('@/components/outfit/ShareToPublicDialog', () => ({
   ShareToPublicDialog: () => null,
 }));
@@ -172,7 +206,7 @@ describe('TryOutfitDialog', () => {
 
       // Should show outfit title
       expect(screen.getByText('Summer Casual')).toBeInTheDocument();
-      // Should show clothing items count
+      // Should show clothing items count (with {count} replaced)
       expect(screen.getByText('2 món đồ')).toBeInTheDocument();
       // Should show clothing items grid
       expect(screen.getByTestId('clothing-items-grid')).toBeInTheDocument();

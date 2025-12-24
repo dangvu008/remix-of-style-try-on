@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ClothingItemInfo } from '@/hooks/useOutfitTryOn';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ClothingItemDetailSheetProps {
   open: boolean;
@@ -30,6 +31,8 @@ export const ClothingItemDetailSheet = ({
   onFindSimilar,
   onAddToWardrobe,
 }: ClothingItemDetailSheetProps) => {
+  const { t } = useLanguage();
+  
   if (!item) return null;
 
   const hasShopUrl = Boolean(item.shopUrl && item.shopUrl.trim() !== '');
@@ -88,7 +91,7 @@ export const ClothingItemDetailSheet = ({
                   rel="noopener noreferrer"
                 >
                   <ExternalLink size={18} />
-                  Mua ngay
+                  {t('clothing_buy_now')}
                 </a>
               </Button>
             )}
@@ -101,7 +104,7 @@ export const ClothingItemDetailSheet = ({
               onClick={() => onFindSimilar?.(item)}
             >
               <Search size={18} />
-              Tìm đồ tương tự
+              {t('clothing_find_similar')}
             </Button>
           </div>
         </div>

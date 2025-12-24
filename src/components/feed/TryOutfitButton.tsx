@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SharedOutfit } from '@/hooks/useOutfitTryOn';
 import { TryOutfitDialog } from './TryOutfitDialog';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TryOutfitButtonProps {
   outfit: SharedOutfit;
@@ -27,6 +28,7 @@ export const TryOutfitButton = ({
   className,
 }: TryOutfitButtonProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { t } = useLanguage();
 
   const handleClick = () => {
     setDialogOpen(true);
@@ -46,7 +48,7 @@ export const TryOutfitButton = ({
             "text-foreground hover:text-primary transition-colors active:scale-90",
             className
           )}
-          title="Mặc thử outfit này"
+          title={t('feed_try_this_outfit')}
         >
           <Shirt size={24} />
         </button>
@@ -68,7 +70,7 @@ export const TryOutfitButton = ({
         variant="default"
       >
         <Shirt size={18} />
-        Mặc thử outfit này
+        {t('feed_try_this_outfit')}
       </Button>
       <TryOutfitDialog
         open={dialogOpen}

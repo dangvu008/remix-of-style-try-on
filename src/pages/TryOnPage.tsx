@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Save, Share2, Sparkles, Loader2, X, Heart, Trash2, Edit2, ImagePlus, Shirt, Square, Crown, Footprints, Glasses, MoreHorizontal, Search, Wand2 } from 'lucide-react';
+import { Camera, Save, Share2, Sparkles, Loader2, X, Heart, Trash2, Edit2, ImagePlus, Shirt, Square, Crown, Footprints, Glasses, MoreHorizontal, Search, Wand2, Bookmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ClothingCard } from '@/components/clothing/ClothingCard';
 import { TryOnCanvas } from '@/components/tryOn/TryOnCanvas';
@@ -10,6 +10,7 @@ import { EditClothingDialog } from '@/components/clothing/EditClothingDialog';
 import { AddClothingDialog } from '@/components/clothing/AddClothingDialog';
 import { ShareOutfitDialog } from '@/components/outfit/ShareOutfitDialog';
 import { ShareToPublicDialog } from '@/components/outfit/ShareToPublicDialog';
+import { SaveOutfitDialog } from '@/components/outfit/SaveOutfitDialog';
 import { LoginRequiredDialog } from '@/components/auth/LoginRequiredDialog';
 import { SelectCategoryDialog } from '@/components/clothing/SelectCategoryDialog';
 import { sampleClothing } from '@/data/sampleClothing';
@@ -40,14 +41,22 @@ const categories: { id: ClothingCategory; icon: React.ElementType; label: string
 
 const BODY_IMAGE_STORAGE_KEY = 'tryon_body_image';
 
+interface HistoryResultData {
+  resultImageUrl: string;
+  bodyImageUrl: string;
+  clothingItems: Array<{ name: string; imageUrl: string }>;
+}
+
 interface TryOnPageProps {
   initialItem?: ClothingItem;
   reuseBodyImage?: string;
   reuseClothingItems?: ClothingItem[];
+  historyResult?: HistoryResultData;
 }
 
-export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = [] }: TryOnPageProps) => {
+export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = [], historyResult }: TryOnPageProps) => {
   const [bodyImage, setBodyImage] = useState<string | undefined>(() => {
+    if (historyResult?.bodyImageUrl) return historyResult.bodyImageUrl;
     if (reuseBodyImage) return reuseBodyImage;
     try {
       return localStorage.getItem(BODY_IMAGE_STORAGE_KEY) || undefined;
@@ -56,6 +65,14 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
     }
   });
   const [selectedItems, setSelectedItems] = useState<ClothingItem[]>(() => {
+    if (historyResult?.clothingItems) {
+      return historyResult.clothingItems.map((item, index) => ({
+        id: `history-${index}`,
+        name: item.name,
+        imageUrl: item.imageUrl,
+        category: 'all' as const,
+      }));
+    }
     if (reuseClothingItems.length > 0) return reuseClothingItems;
     if (initialItem) return [initialItem];
     return [];
@@ -63,7 +80,9 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
   const [activeCategory, setActiveCategory] = useState<ClothingCategory>('top');
   const [clothingSource, setClothingSource] = useState<'sample' | 'saved'>('sample');
   const [clothing] = useState(sampleClothing);
-  const [aiResultImage, setAiResultImage] = useState<string | null>(null);
+  const [aiResultImage, setAiResultImage] = useState<string | null>(() => {
+    return historyResult?.resultImageUrl || null;
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [isResultSaved, setIsResultSaved] = useState(false);
   const [pendingClothingToSave, setPendingClothingToSave] = useState<ClothingItem | null>(null);
@@ -74,6 +93,7 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
   const [searchQuery, setSearchQuery] = useState('');
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showShareToPublicDialog, setShowShareToPublicDialog] = useState(false);
+  const [showSaveOutfitDialog, setShowSaveOutfitDialog] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [showEditResultDialog, setShowEditResultDialog] = useState(false);
@@ -130,7 +150,22 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
     }
   }, [reuseClothingItems]);
 
-  // Get clothing based on source and filter by search
+  // Update state when historyResult changes
+  useEffect(() => {
+    if (historyResult) {
+      setBodyImage(historyResult.bodyImageUrl);
+      setAiResultImage(historyResult.resultImageUrl);
+      setSelectedItems(
+        historyResult.clothingItems.map((item, index) => ({
+          id: `history-${index}`,
+          name: item.name,
+          imageUrl: item.imageUrl,
+          category: 'all' as const,
+        }))
+      );
+      setIsResultSaved(true); // History results are already saved
+    }
+  }, [historyResult]);  // Get clothing based on source and filter by search
   const displayedClothing = clothingSource === 'saved' ? userClothing : clothing;
   const filteredByCategory = activeCategory === 'all'
     ? displayedClothing 
@@ -649,7 +684,7 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
             <div className="w-6" />
           </div>
 
-          {/* Result Image */}
+          {/* Result Image - Single image only */}
           <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
             <img 
               src={aiResultImage} 
@@ -658,24 +693,35 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
             />
           </div>
 
-          {/* Action Bar - Instagram style */}
-          <div className="border-t border-border p-4 space-y-4 safe-bottom">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleSave}
-                disabled={isSaving || isResultSaved}
-                className="press-effect"
+          {/* Action Bar - Reorganized */}
+          <div className="border-t border-border p-4 space-y-3 safe-bottom">
+            {/* Primary actions row */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  if (!user) {
+                    setShowLoginDialog(true);
+                    return;
+                  }
+                  setShowSaveOutfitDialog(true);
+                }}
               >
-                <Heart 
-                  size={26} 
-                  strokeWidth={1.5}
-                  className={cn(isResultSaved && "fill-accent text-accent")} 
-                />
-              </button>
-              <button onClick={handleShare} className="press-effect">
-                <Share2 size={24} strokeWidth={1.5} />
-              </button>
+                <Bookmark size={18} />
+                Lưu riêng
+              </Button>
+              <Button
+                variant="instagram"
+                className="flex-1"
+                onClick={handleShareToPublic}
+              >
+                <Share2 size={18} />
+                Đăng lên
+              </Button>
             </div>
+            
+            {/* Secondary actions row */}
             <div className="flex gap-3">
               <Button
                 variant="outline"
@@ -697,24 +743,29 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
                 Thử lại
               </Button>
             </div>
+            
+            {/* Tertiary actions row */}
             <div className="flex gap-3">
               <Button
-                variant="outline"
-                className="flex-1"
+                variant="ghost"
+                size="sm"
+                className="flex-1 text-muted-foreground"
                 onClick={() => {
                   handleCloseResult();
                   handleAddBodyImage();
                 }}
               >
-                <Camera size={18} />
-                {t('tryon_change_photo')}
+                <Camera size={16} />
+                Đổi ảnh
               </Button>
               <Button
-                variant="instagram"
-                className="flex-1"
-                onClick={handleShareToPublic}
+                variant="ghost"
+                size="sm"
+                className="flex-1 text-muted-foreground"
+                onClick={handleShare}
               >
-                Đăng lên
+                <Share2 size={16} />
+                Chia sẻ link
               </Button>
             </div>
           </div>
@@ -746,6 +797,25 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
           }))}
           onSuccess={() => {
             toast.success('Đã chia sẻ outfit lên trang chủ!');
+          }}
+        />
+      )}
+
+      {/* Save Outfit Dialog (Private) */}
+      {aiResultImage && (
+        <SaveOutfitDialog
+          open={showSaveOutfitDialog}
+          onOpenChange={setShowSaveOutfitDialog}
+          resultImageUrl={aiResultImage}
+          clothingItems={selectedItems.map(item => ({
+            id: item.id,
+            name: item.name,
+            imageUrl: item.imageUrl,
+            category: item.category,
+            purchaseUrl: item.shopUrl,
+          }))}
+          onSuccess={() => {
+            setIsResultSaved(true);
           }}
         />
       )}

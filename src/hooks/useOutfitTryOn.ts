@@ -62,20 +62,27 @@ export interface UseOutfitTryOnReturn {
 
 /**
  * Extracts clothing items from a shared outfit for the try-on processor
+ * If no clothing items are available, uses the outfit image itself
  * @param outfit - The shared outfit to extract items from
  * @returns Array of clothing items with imageUrl and name
  */
 export function extractClothingItemsForTryOn(
   outfit: SharedOutfit
 ): Array<{ imageUrl: string; name: string }> {
-  if (!outfit.clothing_items || !Array.isArray(outfit.clothing_items)) {
-    return [];
+  // If outfit has clothing items, use them
+  if (outfit.clothing_items && Array.isArray(outfit.clothing_items) && outfit.clothing_items.length > 0) {
+    return outfit.clothing_items.map(item => ({
+      imageUrl: item.imageUrl,
+      name: item.name,
+    }));
   }
   
-  return outfit.clothing_items.map(item => ({
-    imageUrl: item.imageUrl,
-    name: item.name,
-  }));
+  // Fallback: use the outfit image itself as the clothing item
+  // This allows trying on outfits that don't have individual clothing items saved
+  return [{
+    imageUrl: outfit.result_image_url,
+    name: outfit.title || 'Outfit',
+  }];
 }
 
 /**
@@ -115,12 +122,8 @@ export const useOutfitTryOn = (): UseOutfitTryOnReturn => {
     setCurrentOutfit(outfit);
 
     // Extract clothing items from outfit (Requirement 1.3)
+    // If no items, will use outfit image as fallback
     const clothingItems = extractClothingItemsForTryOn(outfit);
-
-    if (clothingItems.length === 0) {
-      setError('Outfit không có món đồ nào');
-      return;
-    }
 
     // Process try-on with all clothing items (Requirements 1.4, 1.5, 1.6)
     const tryOnResult = await processVirtualTryOn(bodyImage, clothingItems);
@@ -131,7 +134,10 @@ export const useOutfitTryOn = (): UseOutfitTryOnReturn => {
         resultImageUrl: tryOnResult.generatedImage,
         sourceOutfitId: outfit.id,
         bodyImageUrl: bodyImage,
-        clothingItems: outfit.clothing_items,
+        clothingItems: outfit.clothing_items || clothingItems.map(item => ({
+          name: item.name,
+          imageUrl: item.imageUrl,
+        })),
         createdAt: new Date().toISOString(),
       };
       setResult(outfitResult);

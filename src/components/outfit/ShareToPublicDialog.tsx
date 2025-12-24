@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Upload, Loader2, Globe, CheckCircle2, Sparkles } from 'lucide-react';
 import { useSharedOutfits } from '@/hooks/useSharedOutfits';
+import { useLanguage } from '@/contexts/LanguageContext';
 import confetti from 'canvas-confetti';
 
 interface ClothingItemData {
@@ -42,6 +43,7 @@ export const ShareToPublicDialog = ({
   inspiredByOutfitId,
 }: ShareToPublicDialogProps) => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isSharing, setIsSharing] = useState(false);
@@ -98,9 +100,9 @@ export const ShareToPublicDialog = ({
               <CheckCircle2 className="w-8 h-8 text-primary" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-bold text-foreground">Đăng thành công! 🎉</h3>
+              <h3 className="text-lg font-bold text-foreground">{t('share_success')}</h3>
               <p className="text-sm text-muted-foreground">
-                Outfit của bạn đã được chia sẻ lên cộng đồng
+                {t('share_success_desc')}
               </p>
             </div>
             <div className="flex gap-2 pt-2">
@@ -109,14 +111,14 @@ export const ShareToPublicDialog = ({
                 className="flex-1"
                 onClick={handleClose}
               >
-                Đóng
+                {t('close')}
               </Button>
               <Button
                 className="flex-1 gap-2"
                 onClick={handleViewOnFeed}
               >
                 <Sparkles size={16} />
-                Xem trên Feed
+                {t('share_view_on_feed')}
               </Button>
             </div>
           </div>
@@ -125,10 +127,10 @@ export const ShareToPublicDialog = ({
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Globe size={20} className="text-primary" />
-                Đăng outfit lên Feed
+                {t('share_post_to_feed')}
               </DialogTitle>
               <DialogDescription>
-                Outfit của bạn sẽ được hiển thị trên trang chủ cho mọi người xem và tương tác
+                {t('share_post_desc')}
               </DialogDescription>
             </DialogHeader>
 
@@ -144,7 +146,7 @@ export const ShareToPublicDialog = ({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">
-                    {clothingItems.length} món đồ
+                    {t('feed_items_count').replace('{count}', String(clothingItems.length))}
                   </p>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {clothingItems.slice(0, 3).map((item, idx) => (
@@ -166,10 +168,10 @@ export const ShareToPublicDialog = ({
 
               {/* Title input */}
               <div className="space-y-2">
-                <Label htmlFor="title">Tiêu đề outfit *</Label>
+                <Label htmlFor="title">{t('share_outfit_title')}</Label>
                 <Input
                   id="title"
-                  placeholder="Ví dụ: Outfit đi làm mùa hè"
+                  placeholder={t('share_outfit_title_placeholder')}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   maxLength={100}
@@ -181,10 +183,10 @@ export const ShareToPublicDialog = ({
 
               {/* Description input */}
               <div className="space-y-2">
-                <Label htmlFor="description">Mô tả (tùy chọn)</Label>
+                <Label htmlFor="description">{t('share_description')}</Label>
                 <Textarea
                   id="description"
-                  placeholder="Chia sẻ cảm nghĩ về outfit này..."
+                  placeholder={t('share_description_placeholder')}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   maxLength={500}
@@ -204,7 +206,7 @@ export const ShareToPublicDialog = ({
                   onClick={handleClose}
                   disabled={isSharing}
                 >
-                  Hủy
+                  {t('cancel')}
                 </Button>
                 <Button
                   className="flex-1 gap-2"
@@ -214,12 +216,12 @@ export const ShareToPublicDialog = ({
                   {isSharing ? (
                     <>
                       <Loader2 size={16} className="animate-spin" />
-                      Đang đăng...
+                      {t('share_posting')}
                     </>
                   ) : (
                     <>
                       <Upload size={16} />
-                      Đăng outfit
+                      {t('share_post_outfit')}
                     </>
                   )}
                 </Button>
