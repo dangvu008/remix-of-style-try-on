@@ -241,6 +241,10 @@ export const translations = {
     wardrobe_outfit: 'outfit',
     wardrobe_collection_name: 'Tên bộ sưu tập',
     wardrobe_description: 'Mô tả',
+    wardrobe_add_from_saved: 'Thêm outfit từ tab "Outfit đã lưu"',
+    wardrobe_add_to_collection: 'Thêm vào bộ sưu tập',
+    wardrobe_edit_collection: 'Chỉnh sửa bộ sưu tập',
+    wardrobe_create: 'Tạo',
     
     // Closet page
     closet_login_to_view: 'Đăng nhập để xem tủ đồ',
@@ -555,6 +559,10 @@ export const translations = {
     wardrobe_outfit: 'outfit',
     wardrobe_collection_name: 'Collection name',
     wardrobe_description: 'Description',
+    wardrobe_add_from_saved: 'Add outfit from "Saved Outfits" tab',
+    wardrobe_add_to_collection: 'Add to collection',
+    wardrobe_edit_collection: 'Edit collection',
+    wardrobe_create: 'Create',
     
     // Closet page
     closet_login_to_view: 'Login to view closet',
@@ -869,6 +877,10 @@ export const translations = {
     wardrobe_outfit: '套搭配',
     wardrobe_collection_name: '收藏夹名称',
     wardrobe_description: '描述',
+    wardrobe_add_from_saved: '从"已保存搭配"标签添加搭配',
+    wardrobe_add_to_collection: '添加到收藏夹',
+    wardrobe_edit_collection: '编辑收藏夹',
+    wardrobe_create: '创建',
     
     // Closet page
     closet_login_to_view: '登录查看衣柜',

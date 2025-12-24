@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { sampleClothing } from '@/data/sampleClothing';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface OutfitHistory {
   id: string;
@@ -47,7 +48,7 @@ interface ClosetPageProps {
 export const ClosetPage = ({ onNavigateToTryOn }: ClosetPageProps) => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  
+  const { t } = useLanguage();
   const [activeMainTab, setActiveMainTab] = useState<'clothing' | 'outfits'>('clothing');
   const [selectedCategory, setSelectedCategory] = useState<ClothingCategory>('top');
   const [ownershipFilter, setOwnershipFilter] = useState<OwnershipFilter>('all');
