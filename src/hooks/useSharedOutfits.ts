@@ -119,9 +119,10 @@ export const useSharedOutfits = () => {
       .range(from, to);
 
     if (!error && data) {
-      const typedData = data.map(item => ({
+      const typedData: SharedOutfit[] = data.map(item => ({
         ...item,
         clothing_items: (item.clothing_items || []) as unknown as ClothingItemData[],
+        inspired_by_outfit_id: (item as any).inspired_by_outfit_id ?? null,
         isLiked: userLikes.has(item.id),
       }));
       

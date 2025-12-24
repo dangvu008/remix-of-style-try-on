@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,7 +55,7 @@ interface WardrobePageProps {
 export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'outfits' | 'collections'>('outfits');
   const [history, setHistory] = useState<TryOnHistoryItem[]>([]);
   const [collections, setCollections] = useState<UserCollection[]>([]);
@@ -134,7 +135,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
       .single();
 
     if (error) {
-      toast.error('Không thể tạo bộ sưu tập');
+      toast.error(t('wardrobe_cannot_create'));
       console.error(error);
     } else {
       const newCol: UserCollection = {
@@ -142,7 +143,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
         items: [],
       };
       setCollections(prev => [newCol, ...prev]);
-      toast.success('Đã tạo bộ sưu tập mới!');
+      toast.success(t('wardrobe_collection_created'));
       setIsCreateDialogOpen(false);
       setNewCollectionName('');
       setNewCollectionDesc('');
@@ -161,7 +162,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
       .eq('id', editingCollection.id);
 
     if (error) {
-      toast.error('Không thể cập nhật');
+      toast.error(t('wardrobe_cannot_update'));
       console.error(error);
     } else {
       setCollections(prev => 
@@ -171,7 +172,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
             : c
         )
       );
-      toast.success('Đã cập nhật bộ sưu tập!');
+      toast.success(t('wardrobe_collection_updated'));
       setIsEditDialogOpen(false);
       setEditingCollection(null);
       setNewCollectionName('');
@@ -186,11 +187,11 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
       .eq('id', collection.id);
 
     if (error) {
-      toast.error('Không thể xóa');
+      toast.error(t('wardrobe_cannot_delete'));
       console.error(error);
     } else {
       setCollections(prev => prev.filter(c => c.id !== collection.id));
-      toast.success('Đã xóa bộ sưu tập');
+      toast.success(t('wardrobe_collection_deleted'));
     }
   };
 
@@ -200,7 +201,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
     // Check if outfit already in collection
     const existingItems = collection.items || [];
     if (existingItems.some(item => item.id === selectedOutfit.id)) {
-      toast.error('Outfit này đã có trong bộ sưu tập');
+      toast.error(t('wardrobe_already_in'));
       return;
     }
 
@@ -215,7 +216,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
       .eq('id', collection.id);
 
     if (error) {
-      toast.error('Không thể thêm vào bộ sưu tập');
+      toast.error(t('wardrobe_cannot_add'));
       console.error(error);
     } else {
       setCollections(prev => 
@@ -229,7 +230,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
             : c
         )
       );
-      toast.success(`Đã thêm vào "${collection.name}"`);
+      toast.success(t('wardrobe_added_to').replace('{name}', collection.name));
       setIsAddToCollectionOpen(false);
       setSelectedOutfit(null);
     }
@@ -246,7 +247,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
       .eq('id', collection.id);
 
     if (error) {
-      toast.error('Không thể xóa khỏi bộ sưu tập');
+      toast.error(t('wardrobe_cannot_remove'));
       console.error(error);
     } else {
       setCollections(prev => 
@@ -254,7 +255,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
           c.id === collection.id ? { ...c, items: updatedItems } : c
         )
       );
-      toast.success('Đã xóa khỏi bộ sưu tập');
+      toast.success(t('wardrobe_removed_from'));
     }
   };
 
@@ -282,13 +283,13 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
             <Shirt size={32} className="text-muted-foreground" />
           </div>
           <h2 className="font-display font-bold text-lg text-foreground mb-2">
-            Đăng nhập để xem tủ đồ
+            {t('wardrobe_login_to_view')}
           </h2>
           <p className="text-muted-foreground text-sm mb-4">
-            Bạn cần đăng nhập để lưu và quản lý bộ sưu tập
+            {t('wardrobe_login_required')}
           </p>
           <Button onClick={() => navigate('/auth')} className="gradient-primary">
-            Đăng nhập
+            {t('login')}
           </Button>
         </div>
       </div>
@@ -307,7 +308,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
             style={{ width: '100%', height: '100%' }}
           />
         </div>
-        <p className="text-sm text-muted-foreground animate-pulse">👗 Đang mở tủ quần áo...</p>
+        <p className="text-sm text-muted-foreground animate-pulse">👗 {t('loading')}...</p>
       </div>
     );
   }
@@ -320,10 +321,10 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
           <Shirt size={32} className="text-primary-foreground" />
         </div>
         <h1 className="font-display font-bold text-2xl text-foreground mb-2">
-          Tủ quần áo
+          {t('wardrobe_title')}
         </h1>
         <p className="text-muted-foreground text-sm">
-          {history.length} outfit • {collections.length} bộ sưu tập
+          {history.length} {t('wardrobe_outfit')} • {collections.length} {t('wardrobe_collections')}
         </p>
       </section>
 
@@ -337,7 +338,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          Outfit đã lưu ({history.length})
+          {t('wardrobe_saved_outfits')} ({history.length})
         </button>
         <button
           onClick={() => setActiveTab('collections')}
@@ -347,7 +348,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          Bộ sưu tập ({collections.length})
+          {t('wardrobe_collections')} ({collections.length})
         </button>
       </div>
 
@@ -360,14 +361,14 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
                 <ImageOff size={32} className="text-muted-foreground" />
               </div>
               <h3 className="font-display font-bold text-lg text-foreground mb-2">
-                Chưa có outfit nào
+                {t('wardrobe_no_outfit')}
               </h3>
               <p className="text-muted-foreground text-sm mb-4">
-                Thử đồ với AI và lưu kết quả để xem ở đây
+                {t('history_try_and_save')}
               </p>
               {onNavigateToTryOn && (
                 <Button onClick={onNavigateToTryOn} className="gradient-primary">
-                  Thử đồ ngay
+                  {t('wardrobe_try_now')}
                 </Button>
               )}
             </div>
@@ -390,7 +391,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
                     {/* Clothing count badge */}
                     {item.clothing_items?.length > 0 && (
                       <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-card/90 backdrop-blur-sm text-xs font-medium text-foreground">
-                        {item.clothing_items.length} món
+                        {item.clothing_items.length} {t('history_items')}
                       </div>
                     )}
 
@@ -430,14 +431,14 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
             onClick={() => setIsCreateDialogOpen(true)}
           >
             <FolderPlus size={18} />
-            Tạo bộ sưu tập mới
+            {t('wardrobe_create_collection')}
           </Button>
 
           {/* Collections list */}
           {collections.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground text-sm">
-                Chưa có bộ sưu tập nào
+                {t('wardrobe_no_collection')}
               </p>
             </div>
           ) : (
@@ -475,7 +476,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground mt-1">
-                      {collection.items?.length || 0} outfit • {formatDate(collection.created_at)}
+                      {collection.items?.length || 0} {t('wardrobe_outfit')} • {formatDate(collection.created_at)}
                     </p>
                   </div>
 
@@ -489,23 +490,23 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => openEditDialog(collection)}>
                         <Edit2 size={14} className="mr-2" />
-                        Chỉnh sửa
+                        {t('wardrobe_edit')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
                           navigator.clipboard.writeText(window.location.href);
-                          toast.success('Đã sao chép link!');
+                          toast.success(t('copied_link'));
                         }}
                       >
                         <Share2 size={14} className="mr-2" />
-                        Chia sẻ
+                        {t('share')}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
                         onClick={() => handleDeleteCollection(collection)}
                       >
                         <Trash2 size={14} className="mr-2" />
-                        Xóa
+                        {t('delete')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -548,7 +549,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
                       <div className="text-center">
                         <Plus size={20} className="mx-auto text-muted-foreground/50 mb-1" />
                         <p className="text-xs text-muted-foreground">
-                          Thêm outfit từ tab "Outfit đã lưu"
+                          {t('wardrobe_add_from_saved')}
                         </p>
                       </div>
                     </div>
@@ -564,25 +565,25 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Tạo bộ sưu tập mới</DialogTitle>
+            <DialogTitle>{t('wardrobe_create_collection')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                Tên bộ sưu tập
+                {t('wardrobe_collection_name')}
               </label>
               <Input
-                placeholder="Ví dụ: Đi chơi cuối tuần"
+                placeholder=""
                 value={newCollectionName}
                 onChange={(e) => setNewCollectionName(e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                Mô tả (tùy chọn)
+                {t('wardrobe_description')}
               </label>
               <Input
-                placeholder="Mô tả ngắn về bộ sưu tập..."
+                placeholder=""
                 value={newCollectionDesc}
                 onChange={(e) => setNewCollectionDesc(e.target.value)}
               />
@@ -590,14 +591,14 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              Hủy
+              {t('cancel')}
             </Button>
             <Button 
               onClick={handleCreateCollection}
               disabled={!newCollectionName.trim()}
               className="gradient-primary"
             >
-              Tạo
+              {t('wardrobe_create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -607,12 +608,12 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Chỉnh sửa bộ sưu tập</DialogTitle>
+            <DialogTitle>{t('wardrobe_edit_collection')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                Tên bộ sưu tập
+                {t('wardrobe_collection_name')}
               </label>
               <Input
                 value={newCollectionName}
@@ -621,7 +622,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                Mô tả (tùy chọn)
+                {t('wardrobe_description')}
               </label>
               <Input
                 value={newCollectionDesc}
@@ -631,14 +632,14 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-              Hủy
+              {t('cancel')}
             </Button>
             <Button 
               onClick={handleUpdateCollection}
               disabled={!newCollectionName.trim()}
               className="gradient-primary"
             >
-              Lưu
+              {t('save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -648,13 +649,13 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
       <Dialog open={isAddToCollectionOpen} onOpenChange={setIsAddToCollectionOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Thêm vào bộ sưu tập</DialogTitle>
+            <DialogTitle>{t('wardrobe_add_to_collection')}</DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-2 max-h-[300px] overflow-y-auto">
             {collections.length === 0 ? (
               <div className="text-center py-4">
                 <p className="text-muted-foreground text-sm mb-3">
-                  Chưa có bộ sưu tập nào
+                  {t('wardrobe_no_collection')}
                 </p>
                 <Button
                   variant="outline"
@@ -665,7 +666,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
                   }}
                 >
                   <Plus size={14} className="mr-1" />
-                  Tạo bộ sưu tập
+                  {t('wardrobe_create_collection')}
                 </Button>
               </div>
             ) : (
@@ -693,7 +694,7 @@ export const WardrobePage = ({ onNavigateToTryOn }: WardrobePageProps) => {
                       {collection.name}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {collection.items?.length || 0} outfit
+                      {collection.items?.length || 0} {t('wardrobe_outfit')}
                     </p>
                   </div>
                   <ChevronRight size={16} className="text-muted-foreground" />
