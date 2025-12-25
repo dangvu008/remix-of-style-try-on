@@ -1,15 +1,13 @@
 import { useState, useRef } from 'react';
-import { X, Upload, Link2, Loader2, ImagePlus, Check } from 'lucide-react';
+import { X, Upload, Link2, ImagePlus, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { ClothingItem, ClothingCategory } from '@/types/clothing';
 import { useClothingValidation } from '@/hooks/useClothingValidation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
-import { Progress } from '@/components/ui/progress';
+import { FunLoading, FunProgressBar } from '@/components/ui/fun-loading';
 
 interface AddClothingDialogProps {
   isOpen: boolean;
@@ -41,13 +39,13 @@ export const AddClothingDialog = ({
     issueTranslationMap
   } = useClothingValidation();
 
-  const [removeBackground, setRemoveBackground] = useState(true);
+  // Background removal is disabled - AI try-on model has good recognition capability
+  const removeBackground = false;
 
   const handleClose = () => {
     setImageUrl('');
     setPreviewImage(null);
     setIsLoadingUrl(false);
-    setRemoveBackground(true);
     onClose();
   };
 
@@ -177,19 +175,22 @@ export const AddClothingDialog = ({
         </div>
 
         {isValidating && progress && (
-          <div className="absolute inset-0 z-10 bg-card/95 flex items-center justify-center">
+          <div className="absolute inset-0 z-10 bg-card/95 flex items-center justify-center rounded-2xl">
             <div className="text-center space-y-4 p-6">
-              <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
-              <div className="space-y-2">
-                <p className="font-medium text-foreground">{t('add_clothing_analyzing')}</p>
-                <p className="text-sm text-muted-foreground">
-                  {progress.stage === 'checking_size' && t('add_clothing_checking_size')}
-                  {progress.stage === 'analyzing' && t('add_clothing_detecting')}
-                  {progress.stage === 'removing_background' && t('add_clothing_removing_bg')}
-                  {progress.stage === 'complete' && t('add_clothing_complete')}
-                </p>
+              <FunLoading 
+                type="clothing" 
+                size="lg" 
+                message={
+                  progress.stage === 'checking_size' ? t('add_clothing_checking_size') :
+                  progress.stage === 'analyzing' ? t('add_clothing_detecting') :
+                  progress.stage === 'removing_background' ? t('add_clothing_removing_bg') :
+                  progress.stage === 'complete' ? t('add_clothing_complete') : t('add_clothing_analyzing')
+                }
+                showEmoji={true}
+              />
+              <div className="w-48 mx-auto">
+                <FunProgressBar progress={progress.progress} />
               </div>
-              <Progress value={progress.progress} className="h-2 w-48 mx-auto" />
             </div>
           </div>
         )}
@@ -229,22 +230,8 @@ export const AddClothingDialog = ({
                 </div>
               </button>
 
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="space-y-0.5">
-                  <Label htmlFor="remove-bg-upload" className="text-sm font-medium">
-                    {t('add_clothing_auto_remove_bg')}
-                  </Label>
-                  <p className="text-xs text-muted-foreground">{t('add_clothing_auto_remove_bg_hint')}</p>
-                </div>
-                <Switch
-                  id="remove-bg-upload"
-                  checked={removeBackground}
-                  onCheckedChange={setRemoveBackground}
-                />
-              </div>
-
               <p className="text-xs text-muted-foreground text-center">
-                {removeBackground ? t('add_clothing_ai_detect_and_remove') : t('add_clothing_ai_detect')}
+                {t('add_clothing_ai_detect')}
               </p>
             </TabsContent>
 
@@ -286,14 +273,6 @@ export const AddClothingDialog = ({
                   </>
                 )}
               </Button>
-
-              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                <div className="space-y-0.5">
-                  <Label htmlFor="remove-bg-url" className="text-sm font-medium">{t('add_clothing_auto_remove_bg')}</Label>
-                  <p className="text-xs text-muted-foreground">{t('add_clothing_auto_remove_bg_hint')}</p>
-                </div>
-                <Switch id="remove-bg-url" checked={removeBackground} onCheckedChange={setRemoveBackground} />
-              </div>
 
               <p className="text-xs text-muted-foreground text-center">{t('add_clothing_url_hint')}</p>
             </TabsContent>

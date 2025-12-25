@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react';
-import { Camera, ImagePlus, Loader2, Check, User, AlertTriangle, Lightbulb } from 'lucide-react';
+import { Camera, ImagePlus, Check, User, AlertTriangle, Lightbulb } from 'lucide-react';
 import { useImageValidation, ImageAnalysis } from '@/hooks/useImageValidation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { FunLoading, FunProgressBar } from '@/components/ui/fun-loading';
 
 interface TryOnCanvasProps {
   bodyImageUrl?: string;
@@ -105,14 +105,17 @@ export const TryOnCanvas = ({
       {/* Validation overlay */}
       {isValidating && (
         <div className="absolute inset-0 z-20 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 rounded-xl">
-          <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-          <p className="text-sm font-medium text-foreground mb-3">{getProgressMessage()}</p>
-          <div className="w-full max-w-[200px]">
-            <Progress value={progress?.progress || 0} className="h-1.5" />
+          <FunLoading 
+            type="clothing" 
+            size="lg" 
+            message={getProgressMessage()}
+            showEmoji={true}
+          />
+          <div className="w-full max-w-[200px] mt-4">
+            <FunProgressBar 
+              progress={progress?.progress || 0}
+            />
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            {Math.round(progress?.progress || 0)}%
-          </p>
         </div>
       )}
 

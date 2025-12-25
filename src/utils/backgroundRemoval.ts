@@ -6,7 +6,8 @@ env.useBrowserCache = true;
 
 const MAX_IMAGE_DIMENSION = 1024;
 // Threshold for mask - pixels with mask value below this are kept as foreground
-const MASK_THRESHOLD = 0.5;
+// Lower threshold = keep more of the subject (better for clothing)
+const MASK_THRESHOLD = 0.3;
 
 let segmenter: any = null;
 let isInitializing = false;
@@ -213,6 +214,10 @@ export const removeBackground = async (
     
     // Apply mask with threshold to preserve more of the subject
     // This helps prevent over-removal of light-colored clothing
+    // Count how many pixels would be removed to detect potential issues
+    let removedPixels = 0;
+    let totalPixels = bestMask.data.length;
+    
     for (let i = 0; i < bestMask.data.length; i++) {
       const maskValue = bestMask.data[i];
       // Use threshold: if mask value is below threshold, keep the pixel fully opaque
@@ -224,11 +229,21 @@ export const removeBackground = async (
       } else if (maskValue > (1 - MASK_THRESHOLD)) {
         // Background - make fully transparent
         alpha = 0;
+        removedPixels++;
       } else {
         // Edge region - smooth transition
         alpha = Math.round((1 - maskValue) * 255);
+        if (alpha < 128) removedPixels++;
       }
       data[i * 4 + 3] = alpha;
+    }
+    
+    // Safety check: if more than 90% of pixels would be removed, 
+    // the model likely failed - return original image
+    const removalRatio = removedPixels / totalPixels;
+    if (removalRatio > 0.9) {
+      console.warn(`Too many pixels removed (${Math.round(removalRatio * 100)}%), returning original image`);
+      return imageDataUrl;
     }
     
     outputCtx.putImageData(outputImageData, 0, 0);

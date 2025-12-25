@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
-import { X, RefreshCw, Download, Share2, Bookmark, Check, Loader2 } from 'lucide-react';
+import {
+  RefreshCw,
+  Download,
+  Share2,
+  Bookmark,
+  Check,
+  Loader2,
+} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -7,6 +14,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { TryOnCanvas } from '@/components/tryOn/TryOnCanvas';
 import { AIProgressBar } from '@/components/tryOn/AIProgressBar';
 import { ClothingItemsGrid } from './ClothingItemsGrid';
@@ -17,6 +30,7 @@ import { useTryOnHistory } from '@/hooks/useTryOnHistory';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOutfitAnalysis } from '@/hooks/useOutfitAnalysis';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 interface TryOutfitDialogProps {
   open: boolean;
@@ -68,11 +82,15 @@ export const TryOutfitDialog = ({
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<'save' | 'share' | null>(null);
+  const [excludedIndices, setExcludedIndices] = useState<Set<number>>(new Set());
   
   // Use AI-analyzed items if available, otherwise fall back to database items
-  const displayItems: ClothingItemInfo[] = analyzedItems.length > 0 
+  const allItems: ClothingItemInfo[] = analyzedItems.length > 0 
     ? analyzedItems 
     : outfit.clothing_items || [];
+  
+  // Filter out excluded items
+  const displayItems = allItems.filter((_, index) => !excludedIndices.has(index));
 
   // Reset state when dialog opens and trigger AI analysis
   useEffect(() => {
@@ -81,6 +99,7 @@ export const TryOutfitDialog = ({
       setIsSaved(false);
       setShowLoginDialog(false);
       setPendingAction(null);
+      setExcludedIndices(new Set());
       clearResult();
       
       // Analyze outfit image with AI to get accurate clothing items
@@ -119,6 +138,24 @@ export const TryOutfitDialog = ({
   const handleRetry = () => {
     setStep('select-body');
     clearResult();
+  };
+
+  const handleRemoveItem = (index: number) => {
+    // Find the actual index in allItems based on current displayItems index
+    let actualIndex = -1;
+    let displayIndex = 0;
+    for (let i = 0; i < allItems.length; i++) {
+      if (!excludedIndices.has(i)) {
+        if (displayIndex === index) {
+          actualIndex = i;
+          break;
+        }
+        displayIndex++;
+      }
+    }
+    if (actualIndex !== -1) {
+      setExcludedIndices(prev => new Set([...prev, actualIndex]));
+    }
   };
 
   const handleClose = () => {
@@ -206,21 +243,11 @@ export const TryOutfitDialog = ({
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto p-0">
           <DialogHeader className="p-4 pb-0">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-lg font-semibold">
-                {step === 'select-body' && t('feed_try_outfit')}
-                {step === 'processing' && t('feed_processing')}
-                {step === 'result' && t('feed_result')}
-              </DialogTitle>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={handleClose}
-              >
-                <X size={18} />
-              </Button>
-            </div>
+            <DialogTitle className="text-lg font-semibold">
+              {step === 'select-body' && t('feed_try_outfit')}
+              {step === 'processing' && t('feed_processing')}
+              {step === 'result' && t('feed_result')}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="p-4 space-y-4">
@@ -265,6 +292,8 @@ export const TryOutfitDialog = ({
                     <ClothingItemsGrid
                       items={displayItems}
                       showShopLinks={false}
+                      showRemoveButton={true}
+                      onItemRemove={handleRemoveItem}
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg">
@@ -319,52 +348,83 @@ export const TryOutfitDialog = ({
                   />
                 </div>
 
-                {/* Action buttons */}
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="outline"
-                    className="gap-2"
-                    onClick={handleRetry}
-                  >
-                    <RefreshCw size={16} />
-                    {t('retry')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="gap-2"
-                    onClick={handleDownload}
-                  >
-                    <Download size={16} />
-                    {t('download')}
-                  </Button>
-                  <Button
-                    variant={isSaved ? "secondary" : "default"}
-                    className="gap-2"
-                    onClick={handleSave}
-                    disabled={isSaving || isSaved}
-                  >
-                    {isSaved ? (
-                      <>
-                        <Check size={16} />
-                        {t('feed_saved')}
-                      </>
-                    ) : (
-                      <>
-                        <Bookmark size={16} />
-                        {isSaving ? t('feed_saving') : t('save')}
-                      </>
-                    )}
-                  </Button>
-                  {/* Share button - Requirements 5.1, 5.2, 5.4 */}
-                  <Button
-                    variant="outline"
-                    className="gap-2"
-                    onClick={handleShare}
-                  >
-                    <Share2 size={16} />
-                    {t('share')}
-                  </Button>
-                </div>
+                {/* Action buttons - Icon only with tooltips */}
+                <TooltipProvider delayDuration={300}>
+                  <div className="flex items-center justify-center gap-3">
+                    {/* Retry */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={handleRetry}
+                          className="w-12 h-12 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+                        >
+                          <RefreshCw size={20} className="text-foreground" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>{t('retry')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* Download */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={handleDownload}
+                          className="w-12 h-12 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+                        >
+                          <Download size={20} className="text-foreground" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>{t('download')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* Save */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={handleSave}
+                          disabled={isSaving || isSaved}
+                          className={cn(
+                            "w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95",
+                            isSaved
+                              ? "bg-green-500 text-white"
+                              : "bg-primary text-primary-foreground hover:bg-primary/90",
+                            (isSaving || isSaved) && "opacity-80 cursor-not-allowed"
+                          )}
+                        >
+                          {isSaving ? (
+                            <Loader2 size={20} className="animate-spin" />
+                          ) : isSaved ? (
+                            <Check size={20} />
+                          ) : (
+                            <Bookmark size={20} />
+                          )}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>{isSaved ? t('feed_saved') : t('save')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+
+                    {/* Share */}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={handleShare}
+                          className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+                        >
+                          <Share2 size={20} className="text-white" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>{t('share')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </TooltipProvider>
 
                 {/* Original outfit reference */}
                 <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
