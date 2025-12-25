@@ -23,6 +23,7 @@ import {
 import { TryOnCanvas } from '@/components/tryOn/TryOnCanvas';
 import { AIProgressBar } from '@/components/tryOn/AIProgressBar';
 import { ClothingItemsGrid } from './ClothingItemsGrid';
+import { ShareResultDialog } from '@/components/outfit/ShareResultDialog';
 import { ShareToPublicDialog } from '@/components/outfit/ShareToPublicDialog';
 import { LoginRequiredDialog } from '@/components/auth/LoginRequiredDialog';
 import { useOutfitTryOn, SharedOutfit, ClothingItemInfo } from '@/hooks/useOutfitTryOn';
@@ -80,6 +81,7 @@ export const TryOutfitDialog = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showShareToFeedDialog, setShowShareToFeedDialog] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<'save' | 'share' | null>(null);
   const [excludedIndices, setExcludedIndices] = useState<Set<number>>(new Set());
@@ -114,7 +116,7 @@ export const TryOutfitDialog = ({
       if (pendingAction === 'save') {
         handleSaveInternal();
       } else if (pendingAction === 'share') {
-        setShowShareDialog(true);
+        setShowShareToFeedDialog(true);
       }
       setPendingAction(null);
     }
@@ -224,18 +226,23 @@ export const TryOutfitDialog = ({
   };
 
   /**
-   * Opens the share dialog
-   * Requirements 5.4: Prompt user to log in before sharing if not logged in
+   * Opens the share dialog for quick sharing (link/image)
    */
   const handleShare = () => {
-    // Requirements 5.4: IF the user is not logged in THEN prompt to log in before sharing
+    setShowShareDialog(true);
+  };
+
+  /**
+   * Opens the share to feed dialog
+   * Requirements 5.4: Prompt user to log in before sharing if not logged in
+   */
+  const handleShareToFeed = () => {
     if (!user) {
       setPendingAction('share');
       setShowLoginDialog(true);
       return;
     }
-    
-    setShowShareDialog(true);
+    setShowShareToFeedDialog(true);
   };
 
   return (
@@ -453,11 +460,22 @@ export const TryOutfitDialog = ({
         onCancel={cancelProcessing}
       />
 
-      {/* Share to Public Dialog - Requirements 5.1, 5.2 */}
+      {/* Quick Share Dialog - share via link/image/social */}
       {result && (
-        <ShareToPublicDialog
+        <ShareResultDialog
           open={showShareDialog}
           onOpenChange={setShowShareDialog}
+          imageUrl={result.resultImageUrl}
+          title={outfit.title}
+          onShareToFeed={handleShareToFeed}
+        />
+      )}
+
+      {/* Share to Public Feed Dialog - Requirements 5.1, 5.2 */}
+      {result && (
+        <ShareToPublicDialog
+          open={showShareToFeedDialog}
+          onOpenChange={setShowShareToFeedDialog}
           resultImageUrl={result.resultImageUrl}
           clothingItems={result.clothingItems.map(item => ({
             name: item.name,
@@ -465,7 +483,7 @@ export const TryOutfitDialog = ({
           }))}
           inspiredByOutfitId={outfit.id}
           onSuccess={() => {
-            setShowShareDialog(false);
+            setShowShareToFeedDialog(false);
             handleClose();
           }}
         />
