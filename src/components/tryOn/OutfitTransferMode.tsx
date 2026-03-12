@@ -140,7 +140,8 @@ export const OutfitTransferMode = () => {
           <ShareOutfitDialog
             open={showShareDialog}
             onOpenChange={setShowShareDialog}
-            resultImage={resultImage}
+            imageUrl={resultImage}
+            title="Outfit Transfer Result"
           />
         )}
       </div>
