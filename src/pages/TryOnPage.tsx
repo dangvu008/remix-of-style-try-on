@@ -56,6 +56,7 @@ interface TryOnPageProps {
 }
 
 export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = [], historyResult }: TryOnPageProps) => {
+  const [tryOnMode, setTryOnMode] = useState<'items' | 'outfit'>('items');
   const [bodyImage, setBodyImage] = useState<string | undefined>(() => {
     if (historyResult?.bodyImageUrl) return historyResult.bodyImageUrl;
     if (reuseBodyImage) return reuseBodyImage;
