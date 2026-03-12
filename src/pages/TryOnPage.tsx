@@ -566,6 +566,43 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
 
   return (
     <div className="pt-14 pb-24 max-w-md mx-auto bg-background min-h-screen">
+      {/* Mode Tabs */}
+      <div className="px-4 pt-2 pb-3">
+        <div className="flex gap-2 p-1 bg-muted rounded-xl">
+          <button
+            onClick={() => setTryOnMode('items')}
+            className={cn(
+              "flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2",
+              tryOnMode === 'items'
+                ? 'bg-card text-foreground shadow-soft'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Shirt size={16} />
+            Chọn từng món
+          </button>
+          <button
+            onClick={() => setTryOnMode('outfit')}
+            className={cn(
+              "flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2",
+              tryOnMode === 'outfit'
+                ? 'bg-card text-foreground shadow-soft'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Users size={16} />
+            Copy outfit
+          </button>
+        </div>
+      </div>
+
+      {/* Outfit Transfer Mode */}
+      {tryOnMode === 'outfit' ? (
+        <div className="px-4">
+          <OutfitTransferMode />
+        </div>
+      ) : (
+      <>
       {/* AI Processing Progress Bar */}
       <AIProgressBar progress={aiProgress} isVisible={isProcessing} onCancel={cancelProcessing} />
 
