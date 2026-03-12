@@ -44,6 +44,27 @@ export type Database = {
         }
         Relationships: []
       }
+      favorite_outfits: {
+        Row: {
+          created_at: string
+          id: string
+          outfit_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          outfit_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          outfit_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string
@@ -297,6 +318,8 @@ export type Database = {
           gender: string | null
           id: string
           image_url: string
+          is_favorite: boolean
+          is_hidden: boolean
           is_purchased: boolean
           name: string
           pattern: string | null
@@ -312,6 +335,8 @@ export type Database = {
           gender?: string | null
           id?: string
           image_url: string
+          is_favorite?: boolean
+          is_hidden?: boolean
           is_purchased?: boolean
           name: string
           pattern?: string | null
@@ -327,6 +352,8 @@ export type Database = {
           gender?: string | null
           id?: string
           image_url?: string
+          is_favorite?: boolean
+          is_hidden?: boolean
           is_purchased?: boolean
           name?: string
           pattern?: string | null
