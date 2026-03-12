@@ -151,7 +151,7 @@ export const OutfitTransferMode = () => {
   if (isProcessing) {
     return (
       <div className="w-full max-w-md mx-auto">
-        <AIProgressBar progress={progress} onCancel={cancelProcessing} />
+        <AIProgressBar progress={progress} isVisible={true} onCancel={cancelProcessing} />
       </div>
     );
   }
