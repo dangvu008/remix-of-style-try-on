@@ -28,6 +28,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { OutfitTransferMode } from '@/components/tryOn/OutfitTransferMode';
 
 // Category definitions
 const categories: { id: ClothingCategory; icon: React.ElementType; label: string }[] = [
