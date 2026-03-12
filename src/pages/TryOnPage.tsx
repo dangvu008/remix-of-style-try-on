@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, Save, Share2, Sparkles, Loader2, X, Heart, Trash2, Edit2, ImagePlus, Shirt, Square, Crown, Footprints, Glasses, MoreHorizontal, Search, Wand2, Bookmark } from 'lucide-react';
+import { Camera, Save, Share2, Sparkles, Loader2, X, Heart, Trash2, Edit2, ImagePlus, Shirt, Square, Crown, Footprints, Glasses, MoreHorizontal, Search, Wand2, Bookmark, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ClothingCard } from '@/components/clothing/ClothingCard';
 import { TryOnCanvas } from '@/components/tryOn/TryOnCanvas';
@@ -28,6 +28,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { OutfitTransferMode } from '@/components/tryOn/OutfitTransferMode';
 
 // Category definitions
 const categories: { id: ClothingCategory; icon: React.ElementType; label: string }[] = [
@@ -55,6 +56,7 @@ interface TryOnPageProps {
 }
 
 export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = [], historyResult }: TryOnPageProps) => {
+  const [tryOnMode, setTryOnMode] = useState<'items' | 'outfit'>('items');
   const [bodyImage, setBodyImage] = useState<string | undefined>(() => {
     if (historyResult?.bodyImageUrl) return historyResult.bodyImageUrl;
     if (reuseBodyImage) return reuseBodyImage;
@@ -564,6 +566,43 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
 
   return (
     <div className="pt-14 pb-24 max-w-md mx-auto bg-background min-h-screen">
+      {/* Mode Tabs */}
+      <div className="px-4 pt-2 pb-3">
+        <div className="flex gap-2 p-1 bg-muted rounded-xl">
+          <button
+            onClick={() => setTryOnMode('items')}
+            className={cn(
+              "flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2",
+              tryOnMode === 'items'
+                ? 'bg-card text-foreground shadow-soft'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Shirt size={16} />
+            Chọn từng món
+          </button>
+          <button
+            onClick={() => setTryOnMode('outfit')}
+            className={cn(
+              "flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2",
+              tryOnMode === 'outfit'
+                ? 'bg-card text-foreground shadow-soft'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Users size={16} />
+            Copy outfit
+          </button>
+        </div>
+      </div>
+
+      {/* Outfit Transfer Mode */}
+      {tryOnMode === 'outfit' ? (
+        <div className="px-4">
+          <OutfitTransferMode />
+        </div>
+      ) : (
+      <>
       {/* AI Processing Progress Bar */}
       <AIProgressBar progress={aiProgress} isVisible={isProcessing} onCancel={cancelProcessing} />
 
@@ -1088,6 +1127,8 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
           onEdit={handleEditResult}
           isProcessing={isEditingResult}
         />
+      )}
+      </>
       )}
     </div>
   );
