@@ -19,13 +19,16 @@ export const FavoritesPage = ({ onSelectItem }: FavoritesPageProps) => {
 
   const favoriteItems = clothing.filter(c => c.isFavorite);
 
-  const toggleFavorite = (item: ClothingItem) => {
+  const toggleFavorite = async (id: string): Promise<boolean> => {
+    const item = clothing.find(c => c.id === id);
+    if (!item) return false;
     setClothing(prev =>
       prev.map(c =>
-        c.id === item.id ? { ...c, isFavorite: !c.isFavorite } : c
+        c.id === id ? { ...c, isFavorite: !c.isFavorite } : c
       )
     );
     toast.success(item.isFavorite ? t('favorites_removed') : t('favorites_added'));
+    return true;
   };
 
   const handleCreateCollection = () => {

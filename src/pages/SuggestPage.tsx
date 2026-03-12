@@ -14,13 +14,16 @@ export const SuggestPage = ({ onSelectItem }: SuggestPageProps) => {
   const [clothing, setClothing] = useState(sampleClothing);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const toggleFavorite = (item: ClothingItem) => {
+  const toggleFavorite = async (id: string): Promise<boolean> => {
+    const item = clothing.find(c => c.id === id);
+    if (!item) return false;
     setClothing(prev =>
       prev.map(c =>
-        c.id === item.id ? { ...c, isFavorite: !c.isFavorite } : c
+        c.id === id ? { ...c, isFavorite: !c.isFavorite } : c
       )
     );
     toast.success(item.isFavorite ? 'Đã bỏ yêu thích' : 'Đã thêm vào yêu thích');
+    return true;
   };
 
   const handleRefresh = () => {
