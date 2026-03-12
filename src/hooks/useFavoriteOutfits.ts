@@ -32,19 +32,15 @@ export const useFavoriteOutfits = () => {
     try {
       const { data, error } = await supabase
         .from('favorite_outfits')
-        .select(`
-          id,
-          outfit_id,
-          created_at,
-          outfit:shared_outfits(id, title, result_image_url, likes_count)
-        `)
+        .select('id, outfit_id, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setFavoriteOutfits(data || []);
-      setFavoriteOutfitIds(new Set(data?.map(f => f.outfit_id) || []));
+      const favorites = (data || []) as unknown as FavoriteOutfit[];
+      setFavoriteOutfits(favorites);
+      setFavoriteOutfitIds(new Set(favorites.map(f => f.outfit_id)));
     } catch (error) {
       console.error('Error fetching favorite outfits:', error);
     } finally {
