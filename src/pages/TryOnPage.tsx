@@ -1128,6 +1128,8 @@ export const TryOnPage = ({ initialItem, reuseBodyImage, reuseClothingItems = []
           isProcessing={isEditingResult}
         />
       )}
+      </>
+      )}
     </div>
   );
 };
